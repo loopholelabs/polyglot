@@ -35,10 +35,6 @@ func (c *C) Write(b []byte) int {
 	return len(b)
 }
 
-func (c *C) bytes() []byte {
-	return *c
-}
-
 func CNew() *C {
 	c := make(C, 0, defaultSize)
 	return &c

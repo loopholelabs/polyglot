@@ -33,7 +33,7 @@ func TestWrite(t *testing.T) {
 	assert.NoError(t, err)
 
 	p.Write(b)
-	assert.Equal(t, b, p.bytes())
+	assert.EqualValues(t, b, p)
 
 	p.Reset()
 	assert.NotEqual(t, b, p)
