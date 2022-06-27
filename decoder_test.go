@@ -17,7 +17,7 @@
 package polyglot
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,7 +25,7 @@ import (
 func TestDecoderNil(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	Encoder(p).Nil()
 
 	d := GetDecoder(*p)
@@ -51,7 +51,7 @@ func TestDecoderNil(t *testing.T) {
 func TestDecoderMap(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	m := make(map[string]uint32)
 	m["1"] = 1
 	m["2"] = 2
@@ -106,7 +106,7 @@ func TestDecoderMap(t *testing.T) {
 func TestDecoderSlice(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	m := []string{"1", "2", "3"}
 
 	e := Encoder(p).Slice(uint32(len(m)), StringKind)
@@ -153,7 +153,7 @@ func TestDecoderSlice(t *testing.T) {
 func TestDecoderBytes(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := []byte("Test String")
 
 	Encoder(p).Bytes(v)
@@ -182,7 +182,7 @@ func TestDecoderBytes(t *testing.T) {
 func TestDecoderString(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := "Test String"
 
 	Encoder(p).String(v)
@@ -211,7 +211,7 @@ func TestDecoderString(t *testing.T) {
 func TestDecoderError(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := errors.New("Test Error")
 
 	Encoder(p).Error(v)
@@ -240,7 +240,7 @@ func TestDecoderError(t *testing.T) {
 func TestDecoderBool(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	Encoder(p).Bool(true)
 
 	d := GetDecoder(*p)
@@ -267,7 +267,7 @@ func TestDecoderBool(t *testing.T) {
 func TestDecoderUint8(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint8(32)
 
 	Encoder(p).Uint8(v)
@@ -296,7 +296,7 @@ func TestDecoderUint8(t *testing.T) {
 func TestDecoderUint16(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint16(1024)
 
 	Encoder(p).Uint16(v)
@@ -325,7 +325,7 @@ func TestDecoderUint16(t *testing.T) {
 func TestDecoderUint32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint32(4294967290)
 
 	Encoder(p).Uint32(v)
@@ -354,7 +354,7 @@ func TestDecoderUint32(t *testing.T) {
 func TestDecoderUint64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint64(18446744073709551610)
 
 	Encoder(p).Uint64(v)
@@ -383,7 +383,7 @@ func TestDecoderUint64(t *testing.T) {
 func TestDecoderInt32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int32(-2147483648)
 
 	Encoder(p).Int32(v)
@@ -412,7 +412,7 @@ func TestDecoderInt32(t *testing.T) {
 func TestDecoderInt64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int64(-9223372036854775808)
 
 	Encoder(p).Int64(v)
@@ -441,7 +441,7 @@ func TestDecoderInt64(t *testing.T) {
 func TestDecoderFloat32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := float32(-2147483.648)
 
 	Encoder(p).Float32(v)
@@ -470,7 +470,7 @@ func TestDecoderFloat32(t *testing.T) {
 func TestDecoderFloat64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := -922337203.477580
 
 	Encoder(p).Float64(v)

@@ -20,22 +20,22 @@ const (
 	defaultSize = 512
 )
 
-type C []byte
+type Buffer []byte
 
-func (c *C) Reset() {
-	*c = (*c)[:0]
+func (buf *Buffer) Reset() {
+	*buf = (*buf)[:0]
 }
 
-func (c *C) Write(b []byte) int {
-	if cap(*c)-len(*c) < len(b) {
-		*c = append((*c)[:len(*c)], b...)
+func (buf *Buffer) Write(b []byte) int {
+	if cap(*buf)-len(*buf) < len(b) {
+		*buf = append((*buf)[:len(*buf)], b...)
 	} else {
-		*c = (*c)[:len(*c)+copy((*c)[len(*c):cap(*c)], b)]
+		*buf = (*buf)[:len(*buf)+copy((*buf)[len(*buf):cap(*buf)], b)]
 	}
 	return len(b)
 }
 
-func CNew() *C {
-	c := make(C, 0, defaultSize)
+func NewBuffer() *Buffer {
+	c := make(Buffer, 0, defaultSize)
 	return &c
 }

@@ -17,7 +17,7 @@
 package polyglot
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
@@ -26,7 +26,7 @@ import (
 func TestEncoderNil(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 
 	Encoder(p).Nil()
 
@@ -44,7 +44,7 @@ func TestEncoderNil(t *testing.T) {
 func TestEncoderMap(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	m := make(map[string]uint32)
 	m["1"] = 1
 	m["2"] = 2
@@ -71,7 +71,7 @@ func TestEncoderMap(t *testing.T) {
 func TestEncoderSlice(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	m := make(map[string]uint32)
 	m["1"] = 1
 	m["2"] = 2
@@ -98,13 +98,13 @@ func TestEncoderSlice(t *testing.T) {
 func TestEncoderBytes(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := []byte("Test String")
 
 	Encoder(p).Bytes(v)
 
 	assert.Equal(t, 1+1+4+len(v), len(*p))
-	assert.Equal(t, (C)(v), (*p)[1+1+4:])
+	assert.Equal(t, (Buffer)(v), (*p)[1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -117,14 +117,14 @@ func TestEncoderBytes(t *testing.T) {
 func TestEncoderString(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := "Test String"
 	e := []byte(v)
 
 	Encoder(p).String(v)
 
 	assert.Equal(t, 1+1+4+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1+1+4:])
+	assert.Equal(t, (Buffer)(e), (*p)[1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -137,14 +137,14 @@ func TestEncoderString(t *testing.T) {
 func TestEncoderError(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := errors.New("Test String")
 	e := []byte(v.Error())
 
 	Encoder(p).Error(v)
 
 	assert.Equal(t, 1+1+1+4+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1+1+1+4:])
+	assert.Equal(t, (Buffer)(e), (*p)[1+1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -157,13 +157,13 @@ func TestEncoderError(t *testing.T) {
 func TestEncoderBool(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	e := []byte{trueBool}
 
 	Encoder(p).Bool(true)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -176,14 +176,14 @@ func TestEncoderBool(t *testing.T) {
 func TestEncoderUint8(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint8(32)
 	e := []byte{v}
 
 	Encoder(p).Uint8(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -196,14 +196,14 @@ func TestEncoderUint8(t *testing.T) {
 func TestEncoderUint16(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint16(1024)
 	e := []byte{byte(v >> 8), byte(v)}
 
 	Encoder(p).Uint16(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -216,14 +216,14 @@ func TestEncoderUint16(t *testing.T) {
 func TestEncoderUint32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint32(4294967290)
 	e := []byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 
 	Encoder(p).Uint32(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -236,14 +236,14 @@ func TestEncoderUint32(t *testing.T) {
 func TestEncoderUint64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint64(18446744073709551610)
 	e := []byte{byte(v >> 56), byte(v >> 48), byte(v >> 40), byte(v >> 32), byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
 
 	Encoder(p).Uint64(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -256,14 +256,14 @@ func TestEncoderUint64(t *testing.T) {
 func TestEncoderInt32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int32(-2147483648)
 	e := []byte{byte(uint32(v) >> 24), byte(uint32(v) >> 16), byte(uint32(v) >> 8), byte(uint32(v))}
 
 	Encoder(p).Int32(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -276,14 +276,14 @@ func TestEncoderInt32(t *testing.T) {
 func TestEncoderInt64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int64(-9223372036854775808)
 	e := []byte{byte(uint64(v) >> 56), byte(uint64(v) >> 48), byte(uint64(v) >> 40), byte(uint64(v) >> 32), byte(uint64(v) >> 24), byte(uint64(v) >> 16), byte(uint64(v) >> 8), byte(uint64(v))}
 
 	Encoder(p).Int64(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -296,14 +296,14 @@ func TestEncoderInt64(t *testing.T) {
 func TestEncoderFloat32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := float32(-214648.34432)
 	e := []byte{byte(math.Float32bits(v) >> 24), byte(math.Float32bits(v) >> 16), byte(math.Float32bits(v) >> 8), byte(math.Float32bits(v))}
 
 	Encoder(p).Float32(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -316,14 +316,14 @@ func TestEncoderFloat32(t *testing.T) {
 func TestEncoderFloat64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := -922337203685.2345
 	e := []byte{byte(math.Float64bits(v) >> 56), byte(math.Float64bits(v) >> 48), byte(math.Float64bits(v) >> 40), byte(math.Float64bits(v) >> 32), byte(math.Float64bits(v) >> 24), byte(math.Float64bits(v) >> 16), byte(math.Float64bits(v) >> 8), byte(math.Float64bits(v))}
 
 	Encoder(p).Float64(v)
 
 	assert.Equal(t, 1+len(e), len(*p))
-	assert.Equal(t, (C)(e), (*p)[1:])
+	assert.Equal(t, (Buffer)(e), (*p)[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {

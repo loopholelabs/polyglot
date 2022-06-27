@@ -17,9 +17,8 @@
 package polyglot
 
 import (
+	"errors"
 	"math"
-
-	"github.com/pkg/errors"
 )
 
 const (
