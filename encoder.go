@@ -16,83 +16,83 @@
 
 package polyglot
 
-type encoder C
+type encoder Buffer
 
-func Encoder(b *C) *encoder {
+func Encoder(b *Buffer) *encoder {
 	return (*encoder)(b)
 }
 
 func (e *encoder) Nil() *encoder {
-	encodeNil((*C)(e))
+	encodeNil((*Buffer)(e))
 	return e
 }
 
 func (e *encoder) Map(size uint32, keyKind, valueKind Kind) *encoder {
-	encodeMap((*C)(e), size, keyKind, valueKind)
+	encodeMap((*Buffer)(e), size, keyKind, valueKind)
 	return e
 }
 
 func (e *encoder) Slice(size uint32, kind Kind) *encoder {
-	encodeSlice((*C)(e), size, kind)
+	encodeSlice((*Buffer)(e), size, kind)
 	return e
 }
 
 func (e *encoder) Bytes(value []byte) *encoder {
-	encodeBytes((*C)(e), value)
+	encodeBytes((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) String(value string) *encoder {
-	encodeString((*C)(e), value)
+	encodeString((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Error(value error) *encoder {
-	encodeError((*C)(e), value)
+	encodeError((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Bool(value bool) *encoder {
-	encodeBool((*C)(e), value)
+	encodeBool((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Uint8(value uint8) *encoder {
-	encodeUint8((*C)(e), value)
+	encodeUint8((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Uint16(value uint16) *encoder {
-	encodeUint16((*C)(e), value)
+	encodeUint16((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Uint32(value uint32) *encoder {
-	encodeUint32((*C)(e), value)
+	encodeUint32((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Uint64(value uint64) *encoder {
-	encodeUint64((*C)(e), value)
+	encodeUint64((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Int32(value int32) *encoder {
-	encodeInt32((*C)(e), value)
+	encodeInt32((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Int64(value int64) *encoder {
-	encodeInt64((*C)(e), value)
+	encodeInt64((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Float32(value float32) *encoder {
-	encodeFloat32((*C)(e), value)
+	encodeFloat32((*Buffer)(e), value)
 	return e
 }
 
 func (e *encoder) Float64(value float64) *encoder {
-	encodeFloat64((*C)(e), value)
+	encodeFloat64((*Buffer)(e), value)
 	return e
 }

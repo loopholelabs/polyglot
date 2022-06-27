@@ -18,7 +18,7 @@ package polyglot
 
 import (
 	"crypto/rand"
-	"github.com/pkg/errors"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -26,7 +26,7 @@ import (
 func TestWrite(t *testing.T) {
 	t.Parallel()
 
-	p := *CNew()
+	p := *NewBuffer()
 
 	b := make([]byte, 32)
 	_, err := rand.Read(b)
@@ -104,7 +104,7 @@ func TestChain(t *testing.T) {
 		b:    []byte("other embed Bytes"),
 	}
 
-	p := CNew()
+	p := NewBuffer()
 	encodeError(p, test.err)
 	encodeString(p, test.test)
 	encodeBytes(p, test.b)
@@ -273,7 +273,7 @@ func TestCompleteChain(t *testing.T) {
 		b:    []byte("other embed Bytes"),
 	}
 
-	p := CNew()
+	p := NewBuffer()
 	e := Encoder(p).Error(test.err).String(test.test).Bytes(test.b).Uint8(test.num1).Uint16(test.num2).Uint32(test.num3).Uint64(test.num4).Int32(test.num5).Int64(test.num6).Float32(test.num7).Float64(test.num8).Bool(test.truth).Nil().Slice(uint32(len(test.slice)), StringKind)
 	for _, s := range test.slice {
 		e.String(s)
@@ -393,7 +393,7 @@ func TestCompleteChain(t *testing.T) {
 
 func TestNilSlice(t *testing.T) {
 	s := make([]string, 0)
-	p := CNew()
+	p := NewBuffer()
 	Encoder(p).Slice(uint32(len(s)), StringKind)
 
 	d := GetDecoder(*p)
@@ -411,7 +411,7 @@ func TestError(t *testing.T) {
 
 	v := errors.New("Test Error")
 
-	p := CNew()
+	p := NewBuffer()
 	Encoder(p).Error(v)
 
 	d := GetDecoder(*p)

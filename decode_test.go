@@ -17,7 +17,7 @@
 package polyglot
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,7 +25,7 @@ import (
 func TestDecodeNil(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	encodeNil(p)
 
 	var value bool
@@ -56,7 +56,7 @@ func TestDecodeNil(t *testing.T) {
 func TestDecodeMap(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	encodeMap(p, 32, StringKind, Uint32Kind)
 
 	remaining, size, err := decodeMap(*p, StringKind, Uint32Kind)
@@ -87,7 +87,7 @@ func TestDecodeMap(t *testing.T) {
 func TestDecodeBytes(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := []byte("Test Bytes")
 	encodeBytes(p, v)
 
@@ -150,7 +150,7 @@ func TestDecodeBytes(t *testing.T) {
 func TestDecodeString(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := "Test String"
 	encodeString(p, v)
 
@@ -206,7 +206,7 @@ func TestDecodeString(t *testing.T) {
 func TestDecodeError(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := errors.New("Test Error")
 	encodeError(p, v)
 
@@ -261,7 +261,7 @@ func TestDecodeError(t *testing.T) {
 func TestDecodeBool(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	encodeBool(p, true)
 
 	var value bool
@@ -316,7 +316,7 @@ func TestDecodeBool(t *testing.T) {
 func TestDecodeUint8(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint8(32)
 	encodeUint8(p, v)
 
@@ -350,7 +350,7 @@ func TestDecodeUint8(t *testing.T) {
 func TestDecodeUint16(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint16(1024)
 	encodeUint16(p, v)
 
@@ -384,7 +384,7 @@ func TestDecodeUint16(t *testing.T) {
 func TestDecodeUint32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint32(4294967290)
 	encodeUint32(p, v)
 
@@ -419,7 +419,7 @@ func TestDecodeUint32(t *testing.T) {
 func TestDecodeUint64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := uint64(18446744073709551610)
 	encodeUint64(p, v)
 
@@ -454,7 +454,7 @@ func TestDecodeUint64(t *testing.T) {
 func TestDecodeInt32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int32(-2147483648)
 	encodeInt32(p, v)
 
@@ -489,7 +489,7 @@ func TestDecodeInt32(t *testing.T) {
 func TestDecodeInt64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := int64(-9223372036854775808)
 	encodeInt64(p, v)
 
@@ -524,7 +524,7 @@ func TestDecodeInt64(t *testing.T) {
 func TestDecodeFloat32(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := float32(-12311.12429)
 	encodeFloat32(p, v)
 
@@ -559,7 +559,7 @@ func TestDecodeFloat32(t *testing.T) {
 func TestDecodeFloat64(t *testing.T) {
 	t.Parallel()
 
-	p := CNew()
+	p := NewBuffer()
 	v := -12311241.1242009
 	encodeFloat64(p, v)
 
