@@ -37,10 +37,10 @@ var (
 	Uint16Kind  = Kind([]byte{9})
 	Uint32Kind  = Kind([]byte{10})
 	Uint64Kind  = Kind([]byte{11})
-	Int32Kind   = Kind([]byte{11})
-	Int64Kind   = Kind([]byte{12})
-	Float32Kind = Kind([]byte{13})
-	Float64Kind = Kind([]byte{14})
+	Int32Kind   = Kind([]byte{12})
+	Int64Kind   = Kind([]byte{13})
+	Float32Kind = Kind([]byte{14})
+	Float64Kind = Kind([]byte{15})
 )
 
 type Error string
