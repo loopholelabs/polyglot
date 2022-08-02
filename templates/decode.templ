@@ -15,9 +15,12 @@ func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
         return nil
     }
 
-var err error
-{{ CustomDecode }}
 {{ $decoding := GetDecodingFields .Fields -}}
+{{ $customDecode := CustomDecode -}}
+{{ if or $customDecode $decoding.Other $decoding.SliceFields $decoding.MessageFields -}}
+var err error
+{{ end -}}
+{{ $customDecode }}
 {{ range $field := $decoding.Other -}}
     {{ $decoder := GetLUTDecoder $field.Kind -}}
     {{ if eq $field.Kind 12 -}} {{/* protoreflect.BytesKind */ -}}
