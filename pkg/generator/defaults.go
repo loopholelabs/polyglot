@@ -17,7 +17,7 @@
 package generator
 
 const (
-	extension       = ".frpc.go"
+	extension       = ".polyglot.go"
 	pointer         = "*"
 	mapSuffix       = "Map"
 	slice           = "[]"
