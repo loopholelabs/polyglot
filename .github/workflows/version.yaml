@@ -1,0 +1,23 @@
+name: publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Tag Replacer
+        uses: AlexRogalskiy/github-action-tag-replacer@v2.0.1
+        with:
+          sourceFile: './internal/version/version.go',
+          prefix: 'const (\n	Version = "'
+          suffix: '"\n)'
+          placeholder: 'const \\(\n	Version = "(.*)"\n\\)'
+          replacement: ${{github.ref_name}}
+      - name: push
+        uses: actions-x/commit@v6
