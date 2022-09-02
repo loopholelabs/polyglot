@@ -43,3 +43,7 @@ func NewBuffer() *Buffer {
 func (buf *Buffer) Bytes() []byte {
 	return *buf
 }
+
+func (buf *Buffer) Len() int {
+	return len(*buf)
+}

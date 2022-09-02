@@ -424,3 +424,12 @@ func TestError(t *testing.T) {
 
 	d.Return()
 }
+
+func TestLen(t *testing.T) {
+	t.Parallel()
+
+	p := NewBuffer()
+	Encoder(p).String("Hello World")
+
+	assert.Equal(t, 17, p.Len())
+}
