@@ -133,7 +133,7 @@ func TestChain(t *testing.T) {
 	var err error
 	var remaining []byte
 
-	remaining, val.err, err = decodeError(*p)
+	remaining, val.err, err = decodeError(p.Bytes())
 	assert.NoError(t, err)
 	assert.ErrorIs(t, val.err, test.err)
 
@@ -229,7 +229,7 @@ func TestChain(t *testing.T) {
 		encodeUint64(p, test.num4)
 		encodeBool(p, test.truth)
 		encodeNil(p)
-		remaining, val.err, err = decodeError(*p)
+		remaining, val.err, err = decodeError(p.Bytes())
 		remaining, val.test, err = decodeString(remaining)
 		remaining, val.b, err = decodeBytes(remaining, val.b)
 		remaining, val.num1, err = decodeUint8(remaining)
@@ -286,7 +286,7 @@ func TestCompleteChain(t *testing.T) {
 	val := new(testStruct)
 	var err error
 
-	d := GetDecoder(*p)
+	d := GetDecoder(p.Bytes())
 
 	val.err, err = d.Error()
 	assert.NoError(t, err)
@@ -375,7 +375,7 @@ func TestCompleteChain(t *testing.T) {
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Error(test.err).String(test.test).Bytes(test.b).Uint8(test.num1).Uint16(test.num2).Uint32(test.num3).Uint64(test.num4).Bool(test.truth).Nil()
-		d = GetDecoder(*p)
+		d = GetDecoder(p.Bytes())
 		val.err, err = d.Error()
 		val.test, err = d.String()
 		val.b, err = d.Bytes(val.b)
@@ -396,7 +396,7 @@ func TestNilSlice(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Slice(uint32(len(s)), StringKind)
 
-	d := GetDecoder(*p)
+	d := GetDecoder(p.Bytes())
 	j, err := d.Slice(StringKind)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(len(s)), j)
@@ -414,7 +414,7 @@ func TestError(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Error(v)
 
-	d := GetDecoder(*p)
+	d := GetDecoder(p.Bytes())
 	_, err := d.String()
 	assert.ErrorIs(t, err, InvalidString)
 
@@ -423,4 +423,13 @@ func TestError(t *testing.T) {
 	assert.ErrorIs(t, val, v)
 
 	d.Return()
+}
+
+func TestLen(t *testing.T) {
+	t.Parallel()
+
+	p := NewBuffer()
+	Encoder(p).String("Hello World")
+
+	assert.Equal(t, 17, p.Len())
 }

@@ -39,3 +39,11 @@ func NewBuffer() *Buffer {
 	c := make(Buffer, 0, defaultSize)
 	return &c
 }
+
+func (buf *Buffer) Bytes() []byte {
+	return *buf
+}
+
+func (buf *Buffer) Len() int {
+	return len(*buf)
+}
