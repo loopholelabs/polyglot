@@ -85,7 +85,7 @@ func TestEncodeBytes(t *testing.T) {
 	encodeBytes(p, v)
 
 	assert.Equal(t, 1+1+4+len(v), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(v), (p.Bytes())[1+1+4:])
+	assert.Equal(t, v, (p.Bytes())[1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -105,7 +105,7 @@ func TestEncodeString(t *testing.T) {
 	encodeString(p, v)
 
 	assert.Equal(t, 1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1+1+4:])
+	assert.Equal(t, e, (p.Bytes())[1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -125,7 +125,7 @@ func TestEncodeError(t *testing.T) {
 	encodeError(p, v)
 
 	assert.Equal(t, 1+1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1+1+1+4:])
+	assert.Equal(t, e, (p.Bytes())[1+1+1+4:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -144,7 +144,7 @@ func TestEncodeBool(t *testing.T) {
 	encodeBool(p, true)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -164,7 +164,7 @@ func TestEncodeUint8(t *testing.T) {
 	encodeUint8(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -184,7 +184,7 @@ func TestEncodeUint16(t *testing.T) {
 	encodeUint16(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -204,7 +204,7 @@ func TestEncodeUint32(t *testing.T) {
 	encodeUint32(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -224,7 +224,7 @@ func TestEncodeUint64(t *testing.T) {
 	encodeUint64(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -244,7 +244,7 @@ func TestEncodeInt32(t *testing.T) {
 	encodeInt32(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -264,7 +264,7 @@ func TestEncodeInt64(t *testing.T) {
 	encodeInt64(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -284,7 +284,7 @@ func TestEncodeFloat32(t *testing.T) {
 	encodeFloat32(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -304,7 +304,7 @@ func TestEncodeFloat64(t *testing.T) {
 	encodeFloat64(p, v)
 
 	assert.Equal(t, 1+len(e), len(p.Bytes()))
-	assert.Equal(t, (Buffer)(e), (p.Bytes())[1:])
+	assert.Equal(t, e, (p.Bytes())[1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
