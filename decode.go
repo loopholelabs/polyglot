@@ -22,7 +22,11 @@ import (
 )
 
 const (
-	emptyString = ""
+	emptyString  = ""
+	VarIntLen16  = 3
+	VarIntLen32  = 5
+	VarIntLen64  = 10
+	continuation = 0x80
 )
 
 var (
@@ -163,47 +167,111 @@ func decodeUint8(b []byte) ([]byte, uint8, error) {
 }
 
 func decodeUint16(b []byte) ([]byte, uint16, error) {
-	if len(b) > 2 {
-		if b[0] == Uint16Kind[0] {
-			return b[3:], uint16(b[2]) | uint16(b[1])<<8, nil
+	if len(b) > 1 && b[0] == Uint16Kind[0] {
+		var x uint16
+		var s uint
+		for i := 1; i < VarIntLen16+1; i++ {
+			cb := b[i]
+			if cb < continuation {
+				if i > VarIntLen16 && cb > 1 {
+					return b, 0, InvalidUint32
+				}
+				return b[i+1:], x | uint16(cb)<<s, nil
+			}
+			x |= uint16(cb&(continuation-1)) << s
+			s += 7
 		}
 	}
 	return b, 0, InvalidUint16
 }
 
 func decodeUint32(b []byte) ([]byte, uint32, error) {
-	if len(b) > 4 {
-		if b[0] == Uint32Kind[0] {
-			return b[5:], uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24, nil
+	if len(b) > 1 && b[0] == Uint32Kind[0] {
+		var x uint32
+		var s uint
+		for i := 1; i < VarIntLen32+1; i++ {
+			cb := b[i]
+			// Check if msb is set signifying a continuation byte
+			if cb < continuation {
+				// Check for overflow
+				if i > VarIntLen32 && cb > 1 {
+					return b, 0, InvalidUint32
+				}
+				// End of varint
+				return b[i+1:], x | uint32(cb)<<s, nil
+			}
+			// Add the lower 7 bits to the result and continue to the next byte
+			x |= uint32(cb&(continuation-1)) << s
+			s += 7
 		}
 	}
 	return b, 0, InvalidUint32
 }
 
 func decodeUint64(b []byte) ([]byte, uint64, error) {
-	if len(b) > 8 {
-		if b[0] == Uint64Kind[0] {
-			return b[9:], uint64(b[8]) | uint64(b[7])<<8 | uint64(b[6])<<16 | uint64(b[5])<<24 |
-				uint64(b[4])<<32 | uint64(b[3])<<40 | uint64(b[2])<<48 | uint64(b[1])<<56, nil
+	if len(b) > 1 && b[0] == Uint64Kind[0] {
+		var x uint64
+		var s uint
+		for i := 1; i < VarIntLen64+1; i++ {
+			cb := b[i]
+			// Check if msb is set signifying a continuation byte
+			if cb < continuation {
+				// Check for overflow
+				if i > VarIntLen64 && cb > 1 {
+					return b, 0, InvalidUint64
+				}
+				// End of varint, add the last bits and advance the buffer
+				return b[i+1:], x | uint64(cb)<<s, nil
+			}
+			// Add the lower 7 bits to the result and continue to the next byte
+			x |= uint64(cb&(continuation-1)) << s
+			s += 7
 		}
 	}
 	return b, 0, InvalidUint64
 }
 
 func decodeInt32(b []byte) ([]byte, int32, error) {
-	if len(b) > 4 {
-		if b[0] == Int32Kind[0] {
-			return b[5:], int32(uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24), nil
+	if len(b) > 1 && b[0] == Int32Kind[0] {
+		var ux uint32
+		var s uint
+		for i := 1; i < VarIntLen32+1; i++ {
+			cb := b[i]
+			if cb < continuation {
+				if i > VarIntLen32 && cb > 1 {
+					return b, 0, InvalidInt32
+				}
+				x := int32((ux | uint32(cb)<<s) >> 1)
+				if ux&1 != 0 {
+					x = ^x
+				}
+				return b[i+1:], x, nil
+			}
+			ux |= uint32(cb&(continuation-1)) << s
+			s += 7
 		}
 	}
 	return b, 0, InvalidInt32
 }
 
 func decodeInt64(b []byte) ([]byte, int64, error) {
-	if len(b) > 8 {
-		if b[0] == Int64Kind[0] {
-			return b[9:], int64(uint64(b[8]) | uint64(b[7])<<8 | uint64(b[6])<<16 | uint64(b[5])<<24 |
-				uint64(b[4])<<32 | uint64(b[3])<<40 | uint64(b[2])<<48 | uint64(b[1])<<56), nil
+	if len(b) > 1 && b[0] == Int64Kind[0] {
+		var ux uint64
+		var s uint
+		for i := 1; i < VarIntLen64+1; i++ {
+			cb := b[i]
+			if cb < continuation {
+				if i > VarIntLen64 && cb > 1 {
+					return b, 0, InvalidInt64
+				}
+				x := int64((ux | uint64(cb)<<s) >> 1)
+				if ux&1 != 0 {
+					x = ^x
+				}
+				return b[i+1:], x, nil
+			}
+			ux |= uint64(cb&(continuation-1)) << s
+			s += 7
 		}
 	}
 	return b, 0, InvalidInt64
