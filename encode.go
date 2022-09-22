@@ -117,6 +117,7 @@ func encodeUint8(b *Buffer, value uint8) {
 func encodeUint16(b *Buffer, value uint16) {
 	b.Write(Uint16Kind)
 	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		*b = append(*b, byte(value)|continuation)
 		value >>= 7
 	}
@@ -126,6 +127,7 @@ func encodeUint16(b *Buffer, value uint16) {
 func encodeUint32(b *Buffer, value uint32) {
 	b.Write(Uint32Kind)
 	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		*b = append(*b, byte(value)|continuation)
 		value >>= 7
 	}
@@ -135,6 +137,7 @@ func encodeUint32(b *Buffer, value uint32) {
 func encodeUint64(b *Buffer, value uint64) {
 	b.Write(Uint64Kind)
 	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		*b = append(*b, byte(value)|continuation)
 		value >>= 7
 	}
@@ -143,11 +146,13 @@ func encodeUint64(b *Buffer, value uint64) {
 
 func encodeInt32(b *Buffer, value int32) {
 	b.Write(Int32Kind)
+	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint32(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
 	for castValue >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		*b = append(*b, byte(castValue)|continuation)
 		castValue >>= 7
 	}
@@ -156,11 +161,13 @@ func encodeInt32(b *Buffer, value int32) {
 
 func encodeInt64(b *Buffer, value int64) {
 	b.Write(Int64Kind)
+	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint64(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
 	for castValue >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		*b = append(*b, byte(castValue)|continuation)
 		castValue >>= 7
 	}

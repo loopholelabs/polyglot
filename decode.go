@@ -172,10 +172,12 @@ func decodeUint16(b []byte) ([]byte, uint16, error) {
 		var s uint
 		for i := 1; i < VarIntLen16+1; i++ {
 			cb := b[i]
+			// Check if msb is set signifying a continuation byte
 			if cb < continuation {
 				if i > VarIntLen16 && cb > 1 {
 					return b, 0, InvalidUint32
 				}
+				// End of varint, add the last bits and advance the buffer
 				return b[i+1:], x | uint16(cb)<<s, nil
 			}
 			x |= uint16(cb&(continuation-1)) << s
@@ -193,11 +195,10 @@ func decodeUint32(b []byte) ([]byte, uint32, error) {
 			cb := b[i]
 			// Check if msb is set signifying a continuation byte
 			if cb < continuation {
-				// Check for overflow
 				if i > VarIntLen32 && cb > 1 {
 					return b, 0, InvalidUint32
 				}
-				// End of varint
+				// End of varint, add the last bits and advance the buffer
 				return b[i+1:], x | uint32(cb)<<s, nil
 			}
 			// Add the lower 7 bits to the result and continue to the next byte
@@ -237,11 +238,14 @@ func decodeInt32(b []byte) ([]byte, int32, error) {
 		var s uint
 		for i := 1; i < VarIntLen32+1; i++ {
 			cb := b[i]
+			// Check if msb is set signifying a continuation byte
 			if cb < continuation {
 				if i > VarIntLen32 && cb > 1 {
 					return b, 0, InvalidInt32
 				}
+				// End of varint, add the last bits and cast to signed integer
 				x := int32((ux | uint32(cb)<<s) >> 1)
+				// Flip the bits if the sign bit is set
 				if ux&1 != 0 {
 					x = ^x
 				}
@@ -260,11 +264,14 @@ func decodeInt64(b []byte) ([]byte, int64, error) {
 		var s uint
 		for i := 1; i < VarIntLen64+1; i++ {
 			cb := b[i]
+			// Check if msb is set signifying a continuation byte
 			if cb < continuation {
 				if i > VarIntLen64 && cb > 1 {
 					return b, 0, InvalidInt64
 				}
+				// End of varint, add the last bits and cast to signed integer
 				x := int64((ux | uint64(cb)<<s) >> 1)
+				// Flip the bits if the sign bit is set
 				if ux&1 != 0 {
 					x = ^x
 				}
