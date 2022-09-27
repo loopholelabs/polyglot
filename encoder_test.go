@@ -55,7 +55,7 @@ func TestEncoderMap(t *testing.T) {
 		e.String(k).Uint32(v)
 	}
 
-	assert.Equal(t, 1+1+1+1+4+len(m)*(1+1+4+1+1+4), len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1+1+len(m)*(1+1+1+1+1+1), len(p.Bytes()))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -82,7 +82,7 @@ func TestEncoderSlice(t *testing.T) {
 		e.String(k).Uint32(v)
 	}
 
-	assert.Equal(t, 1+1+1+1+4+len(m)*(1+1+4+1+1+4), len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1+1+len(m)*(1+1+1+1+1+1), len(p.Bytes()))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -103,8 +103,8 @@ func TestEncoderBytes(t *testing.T) {
 
 	Encoder(p).Bytes(v)
 
-	assert.Equal(t, 1+1+4+len(v), len(p.Bytes()))
-	assert.Equal(t, v, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(v), len(p.Bytes()))
+	assert.Equal(t, v, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -123,8 +123,8 @@ func TestEncoderString(t *testing.T) {
 
 	Encoder(p).String(v)
 
-	assert.Equal(t, 1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -143,8 +143,8 @@ func TestEncoderError(t *testing.T) {
 
 	Encoder(p).Error(v)
 
-	assert.Equal(t, 1+1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+1+4:])
+	assert.Equal(t, 1+1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -198,7 +198,7 @@ func TestEncoderUint16(t *testing.T) {
 
 	p := NewBuffer()
 	v := uint16(1024)
-	e := []byte{byte(v >> 8), byte(v)}
+	e := []byte{128, 8}
 
 	Encoder(p).Uint16(v)
 
@@ -218,7 +218,7 @@ func TestEncoderUint32(t *testing.T) {
 
 	p := NewBuffer()
 	v := uint32(4294967290)
-	e := []byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+	e := []byte{250, 255, 255, 255, 15}
 
 	Encoder(p).Uint32(v)
 
@@ -238,7 +238,7 @@ func TestEncoderUint64(t *testing.T) {
 
 	p := NewBuffer()
 	v := uint64(18446744073709551610)
-	e := []byte{byte(v >> 56), byte(v >> 48), byte(v >> 40), byte(v >> 32), byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}
+	e := []byte{250, 255, 255, 255, 255, 255, 255, 255, 255, 1}
 
 	Encoder(p).Uint64(v)
 
@@ -258,7 +258,7 @@ func TestEncoderInt32(t *testing.T) {
 
 	p := NewBuffer()
 	v := int32(-2147483648)
-	e := []byte{byte(uint32(v) >> 24), byte(uint32(v) >> 16), byte(uint32(v) >> 8), byte(uint32(v))}
+	e := []byte{255, 255, 255, 255, 15}
 
 	Encoder(p).Int32(v)
 
@@ -278,7 +278,7 @@ func TestEncoderInt64(t *testing.T) {
 
 	p := NewBuffer()
 	v := int64(-9223372036854775808)
-	e := []byte{byte(uint64(v) >> 56), byte(uint64(v) >> 48), byte(uint64(v) >> 40), byte(uint64(v) >> 32), byte(uint64(v) >> 24), byte(uint64(v) >> 16), byte(uint64(v) >> 8), byte(uint64(v))}
+	e := []byte{255, 255, 255, 255, 255, 255, 255, 255, 255, 1}
 
 	Encoder(p).Int64(v)
 
