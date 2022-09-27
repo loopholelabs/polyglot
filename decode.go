@@ -166,6 +166,8 @@ func decodeUint8(b []byte) ([]byte, uint8, error) {
 	return b, 0, InvalidUint8
 }
 
+// Variable integer encoding with the same format as binary.varint
+//(https://developers.google.com/protocol-buffers/docs/encoding#varints)
 func decodeUint16(b []byte) ([]byte, uint16, error) {
 	if len(b) > 1 && b[0] == Uint16Kind[0] {
 		var x uint16
