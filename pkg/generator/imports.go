@@ -17,7 +17,7 @@
 package generator
 
 var (
-	requiredImports = []string{
+	RequiredImports = []string{
 		"github.com/loopholelabs/polyglot-go",
 		"errors",
 	}

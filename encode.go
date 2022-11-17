@@ -115,7 +115,7 @@ func encodeUint8(b *Buffer, value uint8) {
 }
 
 // Variable integer encoding with the same format as binary.varint
-//(https://developers.google.com/protocol-buffers/docs/encoding#varints)
+// (https://developers.google.com/protocol-buffers/docs/encoding#varints)
 func encodeUint16(b *Buffer, value uint16) {
 	b.Write(Uint16Kind)
 	for value >= continuation {
