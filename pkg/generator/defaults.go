@@ -17,9 +17,9 @@
 package generator
 
 const (
-	extension       = ".polyglot.go"
-	pointer         = "*"
-	mapSuffix       = "Map"
-	slice           = "[]"
-	polyglotAnyKind = "polyglot.AnyKind"
+	Extension       = ".polyglot.go"
+	Pointer         = "*"
+	MapSuffix       = "Map"
+	Slice           = "[]"
+	PolyglotAnyKind = "polyglot.AnyKind"
 )

@@ -21,5 +21,5 @@ import (
 )
 
 func FileName(name string) string {
-	return utils.AppendString(name, extension)
+	return utils.AppendString(name, Extension)
 }
