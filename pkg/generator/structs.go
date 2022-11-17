@@ -105,7 +105,7 @@ var (
 	}
 )
 
-func findValue(field protoreflect.FieldDescriptor) string {
+func FindValue(field protoreflect.FieldDescriptor) string {
 	if kind, ok := typeLUT[field.Kind()]; !ok {
 		switch field.Kind() {
 		case protoreflect.EnumKind:
@@ -113,19 +113,19 @@ func findValue(field protoreflect.FieldDescriptor) string {
 			case protoreflect.Optional, protoreflect.Required:
 				return utils.CamelCase(string(field.Enum().FullName()))
 			case protoreflect.Repeated:
-				return utils.CamelCase(utils.AppendString(slice, string(field.Enum().FullName())))
+				return utils.CamelCase(utils.AppendString(Slice, string(field.Enum().FullName())))
 			default:
 				panic(errUnknownCardinality)
 			}
 		case protoreflect.MessageKind:
 			if field.IsMap() {
-				return utils.CamelCase(utils.AppendString(string(field.FullName()), mapSuffix))
+				return utils.CamelCase(utils.AppendString(string(field.FullName()), MapSuffix))
 			} else {
 				switch field.Cardinality() {
 				case protoreflect.Optional, protoreflect.Required:
-					return utils.AppendString(pointer, utils.CamelCase(string(field.Message().FullName())))
+					return utils.AppendString(Pointer, utils.CamelCase(string(field.Message().FullName())))
 				case protoreflect.Repeated:
-					return utils.AppendString(slice, pointer, utils.CamelCase(string(field.Message().FullName())))
+					return utils.AppendString(Slice, Pointer, utils.CamelCase(string(field.Message().FullName())))
 				default:
 					panic(errUnknownCardinality)
 				}
@@ -135,19 +135,19 @@ func findValue(field protoreflect.FieldDescriptor) string {
 		}
 	} else {
 		if field.Cardinality() == protoreflect.Repeated {
-			kind = slice + kind
+			kind = Slice + kind
 		}
 		return kind
 	}
 }
 
-type encodingFields struct {
+type EncodingFields struct {
 	MessageFields []protoreflect.FieldDescriptor
 	SliceFields   []protoreflect.FieldDescriptor
 	Values        []string
 }
 
-func getEncodingFields(fields protoreflect.FieldDescriptors) encodingFields {
+func GetEncodingFields(fields protoreflect.FieldDescriptors) EncodingFields {
 	var messageFields []protoreflect.FieldDescriptor
 	var sliceFields []protoreflect.FieldDescriptor
 	var values []string
@@ -173,20 +173,20 @@ func getEncodingFields(fields protoreflect.FieldDescriptors) encodingFields {
 			}
 		}
 	}
-	return encodingFields{
+	return EncodingFields{
 		MessageFields: messageFields,
 		SliceFields:   sliceFields,
 		Values:        values,
 	}
 }
 
-type decodingFields struct {
+type DecodingFields struct {
 	MessageFields []protoreflect.FieldDescriptor
 	SliceFields   []protoreflect.FieldDescriptor
 	Other         []protoreflect.FieldDescriptor
 }
 
-func getDecodingFields(fields protoreflect.FieldDescriptors) decodingFields {
+func GetDecodingFields(fields protoreflect.FieldDescriptors) DecodingFields {
 	var messageFields []protoreflect.FieldDescriptor
 	var sliceFields []protoreflect.FieldDescriptor
 	var other []protoreflect.FieldDescriptor
@@ -209,20 +209,20 @@ func getDecodingFields(fields protoreflect.FieldDescriptors) decodingFields {
 		}
 	}
 
-	return decodingFields{
+	return DecodingFields{
 		MessageFields: messageFields,
 		SliceFields:   sliceFields,
 		Other:         other,
 	}
 }
 
-func getKind(kind protoreflect.Kind) string {
+func GetKind(kind protoreflect.Kind) string {
 	var outKind string
 	var ok bool
 	if outKind, ok = kindLUT[kind]; !ok {
 		switch kind {
 		case protoreflect.MessageKind:
-			outKind = polyglotAnyKind
+			outKind = PolyglotAnyKind
 		default:
 			panic(errUnknownKind)
 		}
@@ -230,14 +230,14 @@ func getKind(kind protoreflect.Kind) string {
 	return outKind
 }
 
-func getLUTEncoder(kind protoreflect.Kind) string {
+func GetLUTEncoder(kind protoreflect.Kind) string {
 	return encodeLUT[kind]
 }
 
-func getLUTDecoder(kind protoreflect.Kind) string {
+func GetLUTDecoder(kind protoreflect.Kind) string {
 	return decodeLUT[kind]
 }
 
-func getKindLUT(kind protoreflect.Kind) string {
+func GetKindLUT(kind protoreflect.Kind) string {
 	return kindLUT[kind]
 }
