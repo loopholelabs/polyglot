@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Tag Replacer
-        uses: AlexRogalskiy/github-action-tag-replacer@v2.0.1
+        uses: AlexRogalskiy/github-action-tag-replacer@v2
         with:
           sourceFile: "./internal/version/version.go"
           prefix: 'const (\n	Version = "'
