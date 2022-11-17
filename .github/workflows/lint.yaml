@@ -12,11 +12,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache Linters/Formatters
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/trunk
-          key: trunk-${{ runner.os }}
-
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
