@@ -1,10 +1,11 @@
 {{define "encodeMap"}}
     func (x {{ CamelCase .FullName }}Map) Encode (b *polyglot.Buffer) {
+        {{ $keyKind := GetKind .MapKey.Kind -}}
+        {{ $valKind := GetKind .MapValue.Kind -}}
+        
         if x == nil {
-            polyglot.Encoder(b).Nil()
-        } else {
-            {{ $keyKind := GetKind .MapKey.Kind -}}
-            {{ $valKind := GetKind .MapValue.Kind -}}
+            polyglot.Encoder(b).Map(0, {{$keyKind}}, {{$valKind}})
+        } else { 
             polyglot.Encoder(b).Map(uint32(len(x)), {{$keyKind}}, {{$valKind}})
             for k, v := range x {
                 {{ $keyEncoder := GetLUTEncoder .MapKey.Kind -}}
