@@ -20,9 +20,9 @@ jobs:
       - name: Cargo build
         run: cargo build --release
       - name: Publish to crates.io
-        run: cargo publish --token $CRATES_IO_TOKEN
+        run: cargo publish
         env:
-          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   Typescript:
     runs-on: ubuntu-latest
     steps:
