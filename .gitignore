@@ -12,10 +12,16 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+ vendor/
+
+target/
+Cargo.lock
 
 .idea
 .DS_Store
-*.json
+
+coverage
+
+node_modules
 
 dist/

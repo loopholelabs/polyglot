@@ -1,0 +1,60 @@
+{{define "decode"}}
+
+impl Decode for {{ CamelCase .FullName }} {
+    fn decode (b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<{{ CamelCase .FullName }}>, Box<dyn std::error::Error>> {
+        if b.decode_none() {
+            return Ok(None);
+        }
+
+        if let Ok(error) = b.decode_error() {
+            return Err(error);
+        }
+
+
+        {{ $decoding := GetDecodingFields .Fields -}}
+        {{ range $field := $decoding.SliceFields -}}
+        {{ $val := FindValue $field }}
+        fn {{ SnakeCaseName .Name }}_decode(b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<{{ $val }}>, Box<dyn std::error::Error>> {
+            {{ $kind := GetKind $field.Kind -}}
+            {{ $decoder := GetLUTDecoder $field.Kind -}}
+
+            let {{ SnakeCaseName $field.Name }}_size = b.decode_array({{ $kind }})?;
+            let mut temp = Vec::with_capacity({{ SnakeCaseName $field.Name }}_size);
+            for _ in 0..{{ SnakeCaseName $field.Name }}_size {
+                {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                temp.push({{ CamelCase $field.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidArray)?);
+                {{ else -}}
+                temp.push(b{{ $decoder }}()?);
+                {{ end -}}
+            }
+            Ok(Some(temp))
+        }
+        {{ end -}}
+        {{ range $field := $decoding.MessageFields -}}
+            {{ if $field.IsMap -}}
+                {{ template "decodeMap" $field -}}
+            {{ end -}}
+        {{ end -}}
+        Ok(Some({{ CamelCase .FullName }}{
+            {{ range $field := $decoding.Other -}}
+                {{ $decoder := GetLUTDecoder $field.Kind -}}
+                {{ if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                {{ SnakeCaseName $field.Name }}: {{ FindValue $field }}::try_from(b.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?,
+                {{ else -}}
+                    {{ SnakeCaseName $field.Name }}: b{{ $decoder }}()?,
+                {{end -}}
+            {{end -}}
+            {{ range $field := $decoding.SliceFields -}}
+                {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidArray)?,
+            {{ end -}}
+            {{ range $field := $decoding.MessageFields -}}
+                {{ if $field.Message.IsMapEntry -}}
+                    {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidMap)?,
+                {{ else -}}
+                    {{ SnakeCaseName $field.Name }}: {{ CamelCase $field.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidStruct)?,
+                {{ end -}}
+            {{ end -}}
+        }))
+    }
+}
+{{end}}

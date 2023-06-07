@@ -1,6 +1,6 @@
 # Contributing
 
-Frisbee uses GitHub to manage reviews of pull requests.
+Polyglot uses GitHub to manage reviews of pull requests.
 
 - If you have a trivial fix or improvement, go ahead and create a pull request,
   addressing (with `@...`) the maintainer of this repository (see
@@ -17,4 +17,4 @@ Frisbee uses GitHub to manage reviews of pull requests.
   Practices for Production
   Environments](http://peter.bourgon.org/go-in-production/#formatting-and-style).
 
-- Be sure to sign off on the [DCO](https://github.com/probot/dco#how-it-works)
+- Be sure to sign off on the [DCO](https://github.com/apps/dco)

@@ -1,0 +1,76 @@
+{{define "encode"}}
+impl Encode for {{ CamelCase .FullName }} {
+    fn encode<'a> (&'a self, b: &'a mut Cursor<Vec<u8>>) -> Result<&mut Cursor<Vec<u8>>, Box<dyn std::error::Error>> {
+        {{ $encoding := GetEncodingFields .Fields -}}
+        {{ if $encoding.Values -}}
+            b{{ range $val := $encoding.Values -}}{{ $val -}}?{{end -}};
+        {{ end -}}
+        {{ if $encoding.SliceFields -}}
+            {{template "encodeSlices" $encoding -}}
+        {{end -}}
+        {{ if $encoding.MessageFields -}}
+            {{template "encodeMessages" $encoding -}}
+        {{end -}}
+        Ok(b)
+    }
+}
+{{end}}
+
+{{define "encodeSlices"}}
+    {{ range $field := .SliceFields -}}
+        {{ $encoder := GetLUTEncoder $field.Kind -}}
+
+        {{ if and (eq $encoder "") (eq $field.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+        b.encode_array(self.{{ SnakeCaseName $field.Name}}.len(), Kind::Any)?;
+        for item in &self.{{ SnakeCaseName $field.Name}} {
+            item.encode(b)?;
+        }
+        {{else -}}
+        b.encode_array(self.{{ SnakeCaseName $field.Name}}.len(), {{ GetKindLUT $field.Kind }})?;
+        for item in &self.{{ SnakeCaseName $field.Name}} {
+            {{ if eq $field.Kind 9 -}} {{/* protoreflect.StringKind */ -}}
+            b{{$encoder}}(&item)?;
+            {{ else -}}
+            b{{$encoder}}(item)?;
+            {{ end -}}
+        }
+        {{end -}}
+    {{end -}}
+{{end}}
+
+
+{{define "encodeMessages"}}
+    {{ range $field := .MessageFields -}}
+        {{ if $field.IsMap -}}
+            {{ $keyKind := GetKind $field.MapKey.Kind -}}
+            {{ $valKind := GetKind $field.MapValue.Kind -}}
+            b.encode_map(self.{{ SnakeCaseName $field.Name }}.len(), {{ $keyKind }}, {{ $valKind }})?;
+            for (k, v) in &self.{{ SnakeCaseName $field.Name }} {
+            {{ $keyEncoder := GetLUTEncoder $field.MapKey.Kind -}}
+            {{ if and (eq $keyEncoder "") (eq $field.MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+            k.encode(b)?;
+            {{else -}}
+                {{ if eq $field.MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                b.encode_u32(k as u32)?;
+                {{ else if eq $field.MapKey.Kind 9 -}}  {{/* protoreflect.StringsKind */ -}}
+                b{{$keyEncoder}}(&k)?;
+                {{else -}}
+                    b{{$keyEncoder}}(k)?;
+                {{end -}}
+            {{end -}}
+            {{ $valEncoder := GetLUTEncoder $field.MapValue.Kind -}}
+            {{ if and (eq $valEncoder "") (eq $field.MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+            v.encode(b)?;
+            {{else -}}
+                {{ if eq $field.MapValue.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                b.encode_u32(*v as u32)?;
+                {{else -}}
+                    b{{$valEncoder}}(*v)?;
+                {{end -}}
+            {{end -}}
+            }
+        {{else -}}
+            self.{{ SnakeCaseName $field.Name }}.encode(b)?;
+        {{end -}}
+    {{end -}}
+{{end}}

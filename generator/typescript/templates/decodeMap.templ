@@ -1,0 +1,37 @@
+{{define "decodeMap"}}
+{{ $mapKeyValue := FindValue .MapKey }}
+{{ $mapValueValue := FindValue .MapValue }}
+{{ $keyDecoder := GetLUTDecoder .MapKey.Kind -}}
+{{ $valDecoder := GetLUTDecoder .MapValue.Kind -}}
+
+let {{ LowercaseCamelCaseName .Name }} = {{ TrackDependency "decodeMap" }}(decoded)
+decoded = {{ LowercaseCamelCaseName .Name }}.buf
+const {{ LowercaseCamelCaseName .Name }}Temp: { value: Map<{{ $mapKeyValue }},{{ $mapValueValue }}> } = { value: new Map() }
+for (let i = 0; i < {{ LowercaseCamelCaseName .Name }}.size; i++) {
+    {{ if eq .MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+        let keyEnum = {{ TrackDependency "decodeUint32" }}(decoded)
+        const key = { value: keyEnum as {{ $mapKeyValue }} }
+        decoded = keyEnum.buf
+    {{ else if eq .MapKey.Kind 11 -}}  {{/* protoreflect.MessageKind */ -}}
+        let key = {{ TrimSuffix $mapKeyValue "[]" }}.decode(decoded)
+        decoded = key.buf
+    {{ else -}}
+        let key = {{ $keyDecoder }}(decoded)
+        decoded = key.buf
+    {{end}}
+
+    {{ if eq .MapValue.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+        let valueEnum = {{ TrackDependency "decodeUint32" }}(decoded)
+        const value = { value: valueEnum as {{ $mapValueValue }} }
+        decoded = valueEnum.buf
+    {{ else if eq .MapValue.Kind 11 -}}  {{/* protoreflect.MessageKind */ -}}
+        let value = {{ TrimSuffix $mapValueValue "[]" }}.decode(decoded)
+        decoded = value.buf
+    {{ else -}}
+        let value = {{ $valDecoder }}(decoded)
+        decoded = value.buf
+    {{end}}
+
+    {{ LowercaseCamelCaseName .Name }}.value.set(key, value)
+}
+{{end}}
