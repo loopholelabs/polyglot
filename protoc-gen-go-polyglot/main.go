@@ -1,5 +1,5 @@
 /*
-	Copyright 2022 Loophole Labs
+	Copyright 2023 Loophole Labs
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -17,15 +17,16 @@
 package main
 
 import (
-	"github.com/loopholelabs/polyglot-go/pkg/generator"
-	"io/ioutil"
+	"github.com/loopholelabs/polyglot/generator/golang"
+
+	"io"
 	"os"
 )
 
 func main() {
-	gen := generator.New()
+	gen := golang.New()
 
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		panic(err)
 	}

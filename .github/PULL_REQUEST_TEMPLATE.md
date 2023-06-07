@@ -2,7 +2,7 @@
 
 Please include a summary of the change and which issue has been fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
 
-Fixes # (issue)
+Fixes Issue #
 
 ## Type of change
 
@@ -10,22 +10,16 @@ Fixes # (issue)
 
 - [ ] Bug fix (non-breaking change which fixes an issue) [title: 'fix:']
 - [ ] New feature (non-breaking change which adds functionality) [title: 'feat:']
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Refactor (non-breaking change which does not add functionality) [title: 'refactor:']
+- [ ] Breaking change (fix, feature, or refactor that would change existing functionality or interfaces) [title: 'BREAKING CHANGE:']
 - [ ] This change requires a documentation update
 
 ## Testing
 
-Please make sure that existing test cases pass (with `go test ./... -race` and `go test -bench=. ./... -race`),
-and if required please add new test cases and list them below:
+If required please add new test cases and list them below:
 
 - [ ] Test A
 - [ ] Test B
-
-## Linting
-
-Please make sure you've run the following and fixed any issues that arise:
-
-- [ ] `trunk check` has been run
 
 ## Final Checklist:
 
@@ -35,6 +29,6 @@ Please make sure you've run the following and fixed any issues that arise:
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] I have checked my code and corrected any misspellings
+- [ ] I have signed-off my commits with `git commit -s` (see [the developer's certificate of origin](https://github.com/apps/dco))

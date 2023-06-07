@@ -1,14 +1,23 @@
-# polyglot-go
+<br/>
+<div align="center">
+  <a href="https://github.com/loopholelabs/polyglot">
+    <img src="images/logo.png" alt="Logo" width="120" height="130">
+  </a>
+  <h3 align="center">Polyglot</h3>
+  <p align="center">
+    A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages.
+  </p>
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-
-Go library used for encoding and decoding data types from a portable byte buffer, used in [fRPC](https://github.com/loopholelabs/frpc-go)
+  [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+  [![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)
+  [![Tests](https://github.com/loopholelabs/polyglot/actions/workflows/tests.yml/badge.svg)](https://github.com/loopholelabs/polyglot/actions/workflows/tests.yml)
+</div>
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at [https://github.com/loopholelabs/polyglot-go][gitrepo]. For more
+Bug reports and pull requests are welcome on GitHub at [https://github.com/loopholelabs/polyglot][gitrepo]. For more
 contribution information check
-out [the contribution guide](https://github.com/loopholelabs/polyglot-go/blob/master/CONTRIBUTING.md).
+out [the contribution guide](https://github.com/loopholelabs/polyglot/blob/master/CONTRIBUTING.md).
 
 ## License
 
@@ -23,6 +32,6 @@ Everyone interacting in the Polyglot project’s codebases, issue trackers, chat
 
 [![https://loopholelabs.io][loopholelabs]](https://loopholelabs.io)
 
-[gitrepo]: https://github.com/loopholelabs/polyglot-go
+[gitrepo]: https://github.com/loopholelabs/polyglot
 [loopholelabs]: https://cdn.loopholelabs.io/loopholelabs/LoopholeLabsLogo.svg
 [loophomepage]: https://loopholelabs.io

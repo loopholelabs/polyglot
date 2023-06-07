@@ -1,42 +1,58 @@
 name: Tests
 
-on:
-  pull_request:
-    branches:
-      - "*"
-  push:
-    branches:
-      - "*"
+on: [pull_request]
 
 jobs:
-  tests:
+  golang:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Go
+      - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: "1.19"
+          go-version: "1.20"
           check-latest: true
           cache: true
-
-      - name: Test
+      - name: Run Tests
         run: go test -v ./...
-  tests-race:
+  rust:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          go-version: "1.19"
-          check-latest: true
-          cache: true
-
-      - name: Test with Race Conditions
-        run: go test -race -v ./...
-        timeout-minutes: 15
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+      - name: Cargo check
+        run: cargo check
+      - name: Add wasm32-unknown-unknown target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Cargo check wasm32-unknown-unknown
+        run: cargo check --target wasm32-unknown-unknown
+      - name: Run Tests
+        run: cargo test
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+          registry-url: "https://registry.npmjs.org"
+      - name: Cache the Node Modules Directory
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('package.json') }}
+      - name: Install Node Dependencies with NPM
+        run: npm install
+      - name: Run Tests
+        run: npm run test

@@ -1,5 +1,5 @@
 /*
-	Copyright 2022 Loophole Labs
+	Copyright 2023 Loophole Labs
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -16,83 +16,83 @@
 
 package polyglot
 
-type encoder Buffer
+type BufferEncoder Buffer
 
-func Encoder(b *Buffer) *encoder {
-	return (*encoder)(b)
+func Encoder(b *Buffer) *BufferEncoder {
+	return (*BufferEncoder)(b)
 }
 
-func (e *encoder) Nil() *encoder {
+func (e *BufferEncoder) Nil() *BufferEncoder {
 	encodeNil((*Buffer)(e))
 	return e
 }
 
-func (e *encoder) Map(size uint32, keyKind, valueKind Kind) *encoder {
+func (e *BufferEncoder) Map(size uint32, keyKind, valueKind Kind) *BufferEncoder {
 	encodeMap((*Buffer)(e), size, keyKind, valueKind)
 	return e
 }
 
-func (e *encoder) Slice(size uint32, kind Kind) *encoder {
+func (e *BufferEncoder) Slice(size uint32, kind Kind) *BufferEncoder {
 	encodeSlice((*Buffer)(e), size, kind)
 	return e
 }
 
-func (e *encoder) Bytes(value []byte) *encoder {
+func (e *BufferEncoder) Bytes(value []byte) *BufferEncoder {
 	encodeBytes((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) String(value string) *encoder {
+func (e *BufferEncoder) String(value string) *BufferEncoder {
 	encodeString((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Error(value error) *encoder {
+func (e *BufferEncoder) Error(value error) *BufferEncoder {
 	encodeError((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Bool(value bool) *encoder {
+func (e *BufferEncoder) Bool(value bool) *BufferEncoder {
 	encodeBool((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Uint8(value uint8) *encoder {
+func (e *BufferEncoder) Uint8(value uint8) *BufferEncoder {
 	encodeUint8((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Uint16(value uint16) *encoder {
+func (e *BufferEncoder) Uint16(value uint16) *BufferEncoder {
 	encodeUint16((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Uint32(value uint32) *encoder {
+func (e *BufferEncoder) Uint32(value uint32) *BufferEncoder {
 	encodeUint32((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Uint64(value uint64) *encoder {
+func (e *BufferEncoder) Uint64(value uint64) *BufferEncoder {
 	encodeUint64((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Int32(value int32) *encoder {
+func (e *BufferEncoder) Int32(value int32) *BufferEncoder {
 	encodeInt32((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Int64(value int64) *encoder {
+func (e *BufferEncoder) Int64(value int64) *BufferEncoder {
 	encodeInt64((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Float32(value float32) *encoder {
+func (e *BufferEncoder) Float32(value float32) *BufferEncoder {
 	encodeFloat32((*Buffer)(e), value)
 	return e
 }
 
-func (e *encoder) Float64(value float64) *encoder {
+func (e *BufferEncoder) Float64(value float64) *BufferEncoder {
 	encodeFloat64((*Buffer)(e), value)
 	return e
 }

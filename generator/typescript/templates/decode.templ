@@ -1,0 +1,65 @@
+{{define "decode"}}
+    static decode(buf: Uint8Array): { buf: Uint8Array, value: {{ CamelCase .FullName }}} {
+        let decoded = buf
+        
+        {{ $decoding := GetDecodingFields .Fields -}}
+        {{ range $field := $decoding.SliceFields -}}
+            {{ $val := FindValue $field }}
+            {{ $kind := GetKind $field.Kind -}}
+            {{ $decoder := GetLUTDecoder $field.Kind -}}
+
+            let {{ LowercaseCamelCaseName $field.Name }} = {{ TrackDependency "decodeArray" }}(decoded)
+            decoded = {{ LowercaseCamelCaseName $field.Name }}.buf
+            const {{ LowercaseCamelCaseName $field.Name }}Temp: { value: {{ $val }} } = { value: [] }
+            for (let i = 0; i < {{ LowercaseCamelCaseName $field.Name }}.size; i++) {
+                {{ if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                    let elementEnum = {{ TrackDependency "decodeUint32" }}(decoded)
+                    const element = { value: elementEnum as {{ $val }} }
+                    decoded = element.bufEnum
+                {{ else if eq $field.Kind 11 -}}  {{/* protoreflect.MessageKind */ -}}
+                    let element = {{ TrimSuffix $val "[]" }}.decode(decoded)
+                    decoded = element.buf
+                {{ else -}}
+                    let element = {{ $decoder }}(decoded)
+                    decoded = element.buf
+                {{end -}}
+                {{ LowercaseCamelCaseName $field.Name }}Temp.value.push(element.value)
+            }
+        {{ end -}}
+
+        {{ range $field := $decoding.MessageFields -}}
+            {{ $val := FindValue $field }}
+            {{ if $field.IsMap -}}
+                {{ template "decodeMap" $field -}}
+            {{ else -}}
+                let {{ LowercaseCamelCaseName $field.Name }}Temp = {{ $val }}.decode(decoded)
+                decoded = {{ LowercaseCamelCaseName $field.Name }}Temp.buf
+            {{ end -}}
+        {{ end -}}
+
+        {{ range $field := $decoding.Other -}}
+            {{ $val := FindValue $field }}
+            {{ $decoder := GetLUTDecoder $field.Kind -}}
+            {{ if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                let {{ LowercaseCamelCaseName $field.Name }}U32 = {{ TrackDependency "decodeUint32" }}(decoded)
+                const {{ LowercaseCamelCaseName $field.Name }}Temp = { value: {{ LowercaseCamelCaseName $field.Name }}U32 as {{ $val }} }
+                decoded = {{ LowercaseCamelCaseName $field.Name }}U32.buf
+            {{ else -}}
+                let {{ LowercaseCamelCaseName $field.Name }}Temp = {{ $decoder }}(decoded)
+                decoded = {{ LowercaseCamelCaseName $field.Name }}Temp.buf
+            {{end -}}
+        {{end}}
+
+        return { buf: decoded, value: new {{ CamelCase .FullName }}(
+            {{ range $field := $decoding.Other -}}
+                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
+            {{end -}}
+            {{ range $field := $decoding.SliceFields -}}
+                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
+            {{ end -}}
+            {{ range $field := $decoding.MessageFields -}}
+                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
+            {{ end -}}
+        )}
+    }
+{{end}}
