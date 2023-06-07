@@ -1,21 +1,11 @@
-name: Tests
+name: Releases
 
-on: [pull_request]
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
 
 jobs:
-  Golang:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: "1.20"
-          check-latest: true
-          cache: true
-      - name: Run Tests
-        run: go test -v ./...
   Rust:
     runs-on: ubuntu-latest
     steps:
@@ -27,16 +17,12 @@ jobs:
           toolchain: stable
           override: true
           components: rustfmt, clippy
-      - name: Cargo fmt
-        run: cargo fmt --all -- --check
-      - name: Cargo check
-        run: cargo check
-      - name: Add wasm32-unknown-unknown target
-        run: rustup target add wasm32-unknown-unknown
-      - name: Cargo check wasm32-unknown-unknown
-        run: cargo check --target wasm32-unknown-unknown
-      - name: Run Tests
-        run: cargo test
+      - name: Cargo build
+        run: cargo build --release
+      - name: Publish to crates.io
+        run: cargo publish --token $CRATES_IO_TOKEN
+        env:
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
   Typescript:
     runs-on: ubuntu-latest
     steps:
@@ -54,5 +40,10 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('package.json') }}
       - name: Install Node Dependencies with NPM
         run: npm install
-      - name: Run Tests
-        run: npm run test
+      - name: Build with NPM
+        run: npm run build
+      - name: Publish to NPM
+        run: npm publish --access public
+        working-directory: ./dist
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
