@@ -82,7 +82,7 @@ impl Decoder for Cursor<&mut Vec<u8>> {
                 }
                 self.set_position(self.position() - 1);
             }
-            Err(_) => {},
+            Err(_) => {}
         }
         false
     }
