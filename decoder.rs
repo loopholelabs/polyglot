@@ -75,12 +75,15 @@ pub trait Decoder {
 
 impl Decoder for Cursor<&mut Vec<u8>> {
     fn decode_none(&mut self) -> bool {
-        if let Ok(kind) = self.read_u8() {
-            if kind == Kind::None as u8 {
-                return true;
+        match self.read_u8() {
+            Ok(kind) => {
+                if kind == Kind::None as u8 {
+                    return true;
+                }
+                self.set_position(self.position() - 1);
             }
+            Err(_) => {},
         }
-        self.set_position(self.position() - 1);
         false
     }
 
