@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixes
+
+- Fixing the `decode_none` Rust function which would previously crash if it was decoding from a buffer of size 0.
+
 ## [v1.1.0] - 2023-06-07
 
 ### Changes
