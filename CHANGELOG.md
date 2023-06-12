@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v1.1.1] - 2023-06-12
+
 ### Fixes
 
 - Fixing the `decode_none` Rust function which would previously crash if it was decoding from a buffer of size 0.
@@ -17,5 +19,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Merging Typescript, Golang, and Rust implementations into a single repository
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.1...HEAD
+[v1.1.1]: https://github.com/loopholelabs/scale/compare/v1.1.1
 [v1.1.0]: https://github.com/loopholelabs/scale/compare/v1.1.0
