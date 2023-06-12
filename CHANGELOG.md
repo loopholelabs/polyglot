@@ -7,9 +7,19 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v1.1.1] - 2023-06-12
+
 ### Fixes
 
 - Fixing the `decode_none` Rust function which would previously crash if it was decoding from a buffer of size 0.
+
+### Dependencies
+
+- Bumping Typescript `@typescript-eslint/eslint-plugin` from `^5.59.10` to `^5.59.11`
+- Bumping Typescript `@typescript-eslint/parser` from `^5.59.10` to `^5.59.11`
+- Bumping Typescript `@types/node` from `^20.2.5` to `^20.3.0`
+- Bumping Rust `serde_json` from `1.0.82` to `1.0.96`
+- Bumping Rust `base64` from `0.21.0` to `0.21.2`
 
 ## [v1.1.0] - 2023-06-07
 
@@ -17,5 +27,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Merging Typescript, Golang, and Rust implementations into a single repository
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.1...HEAD
+[v1.1.1]: https://github.com/loopholelabs/scale/compare/v1.1.1
 [v1.1.0]: https://github.com/loopholelabs/scale/compare/v1.1.0

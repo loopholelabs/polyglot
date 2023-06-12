@@ -1,6 +1,6 @@
 {
   "name": "@loopholelabs/polyglot",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "Apache-2.0",
   "description": "A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages.",
   "homepage": "https://github.com/loopholelabs/polyglot",
@@ -17,8 +17,8 @@
     "@types/jest": "^29.5.2",
     "@types/json-bigint": "^1.0.1",
     "@types/node": "^20.3.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.10",
-    "@typescript-eslint/parser": "^5.59.10",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
+    "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^8.42.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
