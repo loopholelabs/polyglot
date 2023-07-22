@@ -18,6 +18,8 @@ package utils
 
 import (
 	"bytes"
+	"errors"
+
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"strings"
@@ -91,7 +93,7 @@ func SnakeCase(s string) string {
 	return b.String()
 }
 
-func SnakeCaseName(name protoreflect.Name) string {
+func SnakeCaseName(name protoreflect.FullName) string {
 	return SnakeCase(string(name))
 }
 
@@ -150,4 +152,69 @@ func Counter(initial int) func() int {
 		i++
 		return i
 	}
+}
+
+// Params is a function that creates a map of parameters for use in go templates to pass multiple values
+func Params(values ...interface{}) (map[string]interface{}, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("parameters must be a list of key/value pairs")
+	}
+	params := make(map[string]interface{}, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("keys must be strings")
+		}
+		params[key] = values[i+1]
+	}
+	return params, nil
+}
+
+// CamelCase returns the CamelCased name.
+// If there is an interior underscore followed by a lower case letter,
+// drop the underscore and convert the letter to upper case.
+// There is a remote possibility of this rewrite causing a name collision,
+// but it's so remote we're prepared to pretend it's nonexistent - since the
+// C++ generator lowercases names, it's extremely unlikely to have two fields
+// with different capitalizations.
+// In short, _my_field_name_2 becomes XMyFieldName_2.
+func GoCamelCase(s string) string {
+	if s == "" {
+		return ""
+	}
+	t := make([]byte, 0, 32)
+	i := 0
+	if s[0] == '_' { // Keep the initial _ if it exists
+		i++
+	}
+	// Invariant: if the next letter is lower case, it must be converted
+	// to upper case.
+	// That is, we process a word at a time, where words are marked by _ or
+	// upper case letter. Digits are treated as words.
+	for ; i < len(s); i++ {
+		c := s[i]
+		if c == '_' && i+1 < len(s) && 'a' <= s[i+1] && s[i+1] <= 'z' {
+			continue // Skip the underscore in s.
+		}
+		if c == '.' {
+			t = append(t, '_')
+			continue
+		}
+		if '0' <= c && c <= '9' {
+			t = append(t, c)
+			continue
+		}
+		// Assume we have a letter now - if not, it's a bogus identifier.
+		// The next word is a sequence of characters that must start upper case.
+		if 'a' <= c && c <= 'z' {
+			c ^= ' ' // Make it a capital letter.
+		}
+		t = append(t, c) // Guaranteed not lower case.
+		// Accept lower case sequence that follows.
+		for i+1 < len(s) && 'a' <= s[i+1] && s[i+1] <= 'z' {
+			i++
+			t = append(t, s[i])
+		}
+	}
+	return string(t)
 }

@@ -1,0 +1,10 @@
+{{define "structs"}}
+    {{ range $i, $v := (MakeIterable $.Messages.Len) }}
+        {{ $message := $.Messages.Get $i }}
+        {{ if not $message.IsMapEntry }}
+            {{template "structs" $message}}
+        {{end}}
+    {{end}}
+    {{template "encode" .}}
+    {{template "decode" .}}
+{{end}}

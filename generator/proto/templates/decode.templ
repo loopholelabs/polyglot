@@ -1,0 +1,121 @@
+{{define "decode"}}
+func (x *{{ProtoName .FullName }}) PolyglotDecode(d *polyglot.Decoder) error {
+    if d.Nil() {
+        return nil
+    }
+
+{{ $decoding := GetDecodingFields .Fields -}}
+{{ if or $decoding.Other $decoding.SliceFields $decoding.MessageFields -}}
+    var err error
+{{ end -}}
+{{ range $field := $decoding.Other -}}
+    {{ $decoder := GetLUTDecoder $field.Kind -}}
+    {{ if eq $field.Kind 12 -}} {{/* protoreflect.BytesKind */ -}}
+    x.{{ CamelCase $field.Name }}, err = d{{ $decoder }}(nil)
+    {{ else if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+    var {{ CamelCase $field.Name }}Temp uint32
+    {{ CamelCase $field.Name }}Temp, err = d{{ $decoder }}()
+    x.{{ CamelCase $field.Name }} = {{ FindValue $field }}({{ CamelCase $field.Name }}Temp)
+    {{ else if and (eq $field.Cardinality 1) UseNullablePointers -}} {{/* optional */ -}}
+    x.{{ CamelCase $field.Name }}, err = d{{ $decoder }}Ptr()
+    {{ else -}}
+        x.{{ CamelCase $field.Name }}, err = d{{ $decoder }}()
+    {{end -}}
+    if err != nil {
+        return err
+    }
+{{end -}}
+
+{{ if $decoding.SliceFields -}}
+    var sliceSize uint32
+{{end -}}
+{{ range $field := $decoding.SliceFields -}}
+    {{ $kind := GetKind $field.Kind -}}
+    sliceSize, err = d.Slice({{ $kind }})
+    if err != nil {
+        return err
+    }
+    if uint32(len(x.{{ CamelCase $field.Name }})) != sliceSize {
+        x.{{ CamelCase $field.Name }} = make({{ FindValue $field }}, sliceSize)
+    }
+    for i := uint32(0); i < sliceSize; i++ {
+        {{ $decoder := GetLUTDecoder $field.Kind -}}
+        {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+        if x.{{ CamelCase $field.Name }}[i] == nil {
+            x.{{ CamelCase $field.Name }}[i] = new({{ ProtoName $field.Message.FullName }})
+        }
+        err = x.{{ CamelCase $field.Name }}[i].PolyglotDecode(d)
+        {{ else -}}
+            x.{{ CamelCase $field.Name }}[i], err = d{{ $decoder }}()
+        {{end -}}
+        if err != nil {
+            return err
+        }
+    }
+{{end -}}
+
+{{ range $field := $decoding.MessageFields -}}
+    {{ if $field.IsMap -}}
+        if !d.Nil() {
+            {{ $keyKind := GetKind $field.MapKey.Kind -}}
+            {{ $valKind := GetKind $field.MapValue.Kind -}}
+
+            {{ CamelCase $field.Name }}Size, err := d.Map({{ $keyKind }}, {{ $valKind }})
+            if err != nil {
+                return err
+            }
+            {{ if eq .MapKey.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+            var {{ CamelCase .MapKey.Name }}Temp uint32
+            {{end -}}
+            {{ if eq .MapValue.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+            var {{ CamelCase .MapValue.Name }}Temp uint32
+            {{end -}}
+            var err error
+            for i := uint32(0); i < {{ CamelCase $field.Name }}Size; i++ {
+                {{ $keyDecoder := GetLUTDecoder .MapKey.Kind -}}
+                {{ if and (eq $keyDecoder "") (eq .MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                k := New{{ CamelCase .MapKey.Message.Name }}()
+                err = k.polyglotDecode(d)
+                {{else -}}
+                    {{ if eq .MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                    {{ CamelCase .MapKey.Name }}Temp, err = d{{$keyDecoder}}()
+                        k = {{ FindValue .MapKey }}({{ CamelCase .MapKey.Name }}Temp)
+                    {{else -}}
+                        k, err = d{{$keyDecoder}}()
+                    {{end -}}
+                {{end -}}
+                if err != nil {
+                    return err
+                }
+                {{ $valDecoder := GetLUTDecoder .MapValue.Kind -}}
+                {{ if and (eq $valDecoder "") (eq .MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                v := New{{ CamelCase .MapValue.Message.Name }}()
+                err = v.polyglotDecode(d)
+                {{else -}}
+                    {{ if eq .MapValue.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                        {{CamelCase .MapValue.Name}}Temp, err = d{{$valDecoder}}()
+                        v = {{ FindValue .MapValue }}({{ CamelCase .MapValue.Name }}Temp)
+                    {{else -}}
+                        v, err = d{{$valDecoder}}()
+                    {{end -}}
+                {{end -}}
+
+                if err != nil {
+                    return err
+                }
+                x.{{ CamelCase $field.Name }}[k] = v
+            }
+        }
+    {{ else -}}
+        if x.{{ CamelCase $field.Name }} == nil {
+            x.{{ CamelCase $field.Name }} = new({{ ProtoName $field.Message.FullName }})
+        }
+        err = x.{{ CamelCase $field.Name }}.PolyglotDecode(d)
+        if err != nil {
+            return err
+        }
+    {{end -}}
+{{end -}}
+    return nil
+}
+{{end}}

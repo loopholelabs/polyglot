@@ -30,7 +30,7 @@ var (
 )
 
 var (
-	typeLUT = map[protoreflect.Kind]string{
+	TypeLUT = map[protoreflect.Kind]string{
 		protoreflect.BoolKind:     "bool",
 		protoreflect.Int32Kind:    "int32",
 		protoreflect.Sint32Kind:   "int32",
@@ -48,7 +48,7 @@ var (
 		protoreflect.BytesKind:    "[]byte",
 	}
 
-	encodeLUT = map[protoreflect.Kind]string{
+	EncodeLUT = map[protoreflect.Kind]string{
 		protoreflect.BoolKind:     ".Bool",
 		protoreflect.Int32Kind:    ".Int32",
 		protoreflect.Sint32Kind:   ".Int32",
@@ -67,7 +67,7 @@ var (
 		protoreflect.EnumKind:     ".Uint32",
 	}
 
-	decodeLUT = map[protoreflect.Kind]string{
+	DecodeLUT = map[protoreflect.Kind]string{
 		protoreflect.BoolKind:     ".Bool",
 		protoreflect.Int32Kind:    ".Int32",
 		protoreflect.Sint32Kind:   ".Int32",
@@ -86,7 +86,7 @@ var (
 		protoreflect.EnumKind:     ".Uint32",
 	}
 
-	kindLUT = map[protoreflect.Kind]string{
+	KindLUT = map[protoreflect.Kind]string{
 		protoreflect.BoolKind:     "polyglot.BoolKind",
 		protoreflect.Int32Kind:    "polyglot.Int32Kind",
 		protoreflect.Sint32Kind:   "polyglot.Int32Kind",
@@ -107,7 +107,7 @@ var (
 )
 
 func FindValue(field protoreflect.FieldDescriptor) string {
-	if kind, ok := typeLUT[field.Kind()]; !ok {
+	if kind, ok := TypeLUT[field.Kind()]; !ok {
 		switch field.Kind() {
 		case protoreflect.EnumKind:
 			switch field.Cardinality() {
@@ -158,7 +158,7 @@ func GetEncodingFields(fields protoreflect.FieldDescriptors) EncodingFields {
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
-			if encoder, ok := encodeLUT[field.Kind()]; !ok {
+			if encoder, ok := EncodeLUT[field.Kind()]; !ok {
 				switch field.Kind() {
 				case protoreflect.MessageKind:
 					messageFields = append(messageFields, field)
@@ -168,6 +168,8 @@ func GetEncodingFields(fields protoreflect.FieldDescriptors) EncodingFields {
 			} else {
 				if field.Kind() == protoreflect.EnumKind {
 					values = append(values, fmt.Sprintf("%s(uint32(x.%s))", encoder, utils.CamelCase(string(field.Name()))))
+				} else if field.Cardinality() == protoreflect.Optional {
+					values = append(values, fmt.Sprintf("%sPtr(x.%s)", encoder, utils.CamelCase(string(field.Name()))))
 				} else {
 					values = append(values, fmt.Sprintf("%s(x.%s)", encoder, utils.CamelCase(string(field.Name()))))
 				}
@@ -197,7 +199,7 @@ func GetDecodingFields(fields protoreflect.FieldDescriptors) DecodingFields {
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
-			if _, ok := decodeLUT[field.Kind()]; !ok {
+			if _, ok := DecodeLUT[field.Kind()]; !ok {
 				switch field.Kind() {
 				case protoreflect.MessageKind:
 					messageFields = append(messageFields, field)
@@ -220,7 +222,7 @@ func GetDecodingFields(fields protoreflect.FieldDescriptors) DecodingFields {
 func GetKind(kind protoreflect.Kind) string {
 	var outKind string
 	var ok bool
-	if outKind, ok = kindLUT[kind]; !ok {
+	if outKind, ok = KindLUT[kind]; !ok {
 		switch kind {
 		case protoreflect.MessageKind:
 			outKind = PolyglotAnyKind
@@ -232,13 +234,13 @@ func GetKind(kind protoreflect.Kind) string {
 }
 
 func GetLUTEncoder(kind protoreflect.Kind) string {
-	return encodeLUT[kind]
+	return EncodeLUT[kind]
 }
 
 func GetLUTDecoder(kind protoreflect.Kind) string {
-	return decodeLUT[kind]
+	return DecodeLUT[kind]
 }
 
 func GetKindLUT(kind protoreflect.Kind) string {
-	return kindLUT[kind]
+	return KindLUT[kind]
 }

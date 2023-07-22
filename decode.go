@@ -129,6 +129,14 @@ func decodeString(b []byte) ([]byte, string, error) {
 	return b, emptyString, InvalidString
 }
 
+func decodeNullableString(b []byte) ([]byte, *string, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, s, err := decodeString(b)
+	return b, &s, err
+}
+
 func decodeError(b []byte) ([]byte, error, error) {
 	if len(b) > 0 {
 		if b[0] == ErrorKind[0] {
@@ -157,6 +165,14 @@ func decodeBool(b []byte) ([]byte, bool, error) {
 	return b, false, InvalidBool
 }
 
+func decodeNullableBool(b []byte) ([]byte, *bool, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, bval, err := decodeBool(b)
+	return b, &bval, err
+}
+
 func decodeUint8(b []byte) ([]byte, uint8, error) {
 	if len(b) > 1 {
 		if b[0] == Uint8Kind[0] {
@@ -164,6 +180,14 @@ func decodeUint8(b []byte) ([]byte, uint8, error) {
 		}
 	}
 	return b, 0, InvalidUint8
+}
+
+func decodeNullableUint8(b []byte) ([]byte, *uint8, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeUint8(b)
+	return b, &uval, err
 }
 
 // Variable integer encoding with the same format as binary.varint
@@ -189,6 +213,14 @@ func decodeUint16(b []byte) ([]byte, uint16, error) {
 	return b, 0, InvalidUint16
 }
 
+func decodeNullableUint16(b []byte) ([]byte, *uint16, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeUint16(b)
+	return b, &uval, err
+}
+
 func decodeUint32(b []byte) ([]byte, uint32, error) {
 	if len(b) > 1 && b[0] == Uint32Kind[0] {
 		var x uint32
@@ -209,6 +241,14 @@ func decodeUint32(b []byte) ([]byte, uint32, error) {
 		}
 	}
 	return b, 0, InvalidUint32
+}
+
+func decodeNullableUint32(b []byte) ([]byte, *uint32, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeUint32(b)
+	return b, &uval, err
 }
 
 func decodeUint64(b []byte) ([]byte, uint64, error) {
@@ -232,6 +272,14 @@ func decodeUint64(b []byte) ([]byte, uint64, error) {
 		}
 	}
 	return b, 0, InvalidUint64
+}
+
+func decodeNullableUint64(b []byte) ([]byte, *uint64, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeUint64(b)
+	return b, &uval, err
 }
 
 func decodeInt32(b []byte) ([]byte, int32, error) {
@@ -260,6 +308,14 @@ func decodeInt32(b []byte) ([]byte, int32, error) {
 	return b, 0, InvalidInt32
 }
 
+func decodeNullableInt32(b []byte) ([]byte, *int32, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeInt32(b)
+	return b, &uval, err
+}
+
 func decodeInt64(b []byte) ([]byte, int64, error) {
 	if len(b) > 1 && b[0] == Int64Kind[0] {
 		var ux uint64
@@ -286,6 +342,14 @@ func decodeInt64(b []byte) ([]byte, int64, error) {
 	return b, 0, InvalidInt64
 }
 
+func decodeNullableInt64(b []byte) ([]byte, *int64, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeInt64(b)
+	return b, &uval, err
+}
+
 func decodeFloat32(b []byte) ([]byte, float32, error) {
 	if len(b) > 4 {
 		if b[0] == Float32Kind[0] {
@@ -293,6 +357,14 @@ func decodeFloat32(b []byte) ([]byte, float32, error) {
 		}
 	}
 	return b, 0, InvalidFloat32
+}
+
+func decodeNullableFloat32(b []byte) ([]byte, *float32, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeFloat32(b)
+	return b, &uval, err
 }
 
 func decodeFloat64(b []byte) ([]byte, float64, error) {
@@ -303,4 +375,12 @@ func decodeFloat64(b []byte) ([]byte, float64, error) {
 		}
 	}
 	return b, 0, InvalidFloat64
+}
+
+func decodeNullableFloat64(b []byte) ([]byte, *float64, error) {
+	if b[0] == NilKind[0] {
+		return b, nil, nil
+	}
+	b, uval, err := decodeFloat64(b)
+	return b, &uval, err
 }

@@ -1,0 +1,6 @@
+{{define "messages"}}
+{{range $i, $e := (MakeIterable .messages.Len) -}}
+    {{ $message := $.messages.Get $i }}
+    {{template "structs" $message }}
+{{end}}
+{{end}}

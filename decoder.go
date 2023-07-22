@@ -75,6 +75,11 @@ func (d *Decoder) String() (value string, err error) {
 	return
 }
 
+func (d *Decoder) StringPtr() (value *string, err error) {
+	d.b, value, err = decodeNullableString(d.b)
+	return
+}
+
 func (d *Decoder) Error() (value, err error) {
 	d.b, value, err = decodeError(d.b)
 	return
@@ -85,8 +90,18 @@ func (d *Decoder) Bool() (value bool, err error) {
 	return
 }
 
+func (d *Decoder) BoolPtr() (value *bool, err error) {
+	d.b, value, err = decodeNullableBool(d.b)
+	return
+}
+
 func (d *Decoder) Uint8() (value uint8, err error) {
 	d.b, value, err = decodeUint8(d.b)
+	return
+}
+
+func (d *Decoder) Uint8Ptr() (value *uint8, err error) {
+	d.b, value, err = decodeNullableUint8(d.b)
 	return
 }
 
@@ -95,8 +110,18 @@ func (d *Decoder) Uint16() (value uint16, err error) {
 	return
 }
 
+func (d *Decoder) Uint16Ptr() (value *uint16, err error) {
+	d.b, value, err = decodeNullableUint16(d.b)
+	return
+}
+
 func (d *Decoder) Uint32() (value uint32, err error) {
 	d.b, value, err = decodeUint32(d.b)
+	return
+}
+
+func (d *Decoder) Uint32Ptr() (value *uint32, err error) {
+	d.b, value, err = decodeNullableUint32(d.b)
 	return
 }
 
@@ -105,8 +130,18 @@ func (d *Decoder) Uint64() (value uint64, err error) {
 	return
 }
 
+func (d *Decoder) Uint64Ptr() (value *uint64, err error) {
+	d.b, value, err = decodeNullableUint64(d.b)
+	return
+}
+
 func (d *Decoder) Int32() (value int32, err error) {
 	d.b, value, err = decodeInt32(d.b)
+	return
+}
+
+func (d *Decoder) Int32Ptr() (value *int32, err error) {
+	d.b, value, err = decodeNullableInt32(d.b)
 	return
 }
 
@@ -115,12 +150,27 @@ func (d *Decoder) Int64() (value int64, err error) {
 	return
 }
 
+func (d *Decoder) Int64Ptr() (value *int64, err error) {
+	d.b, value, err = decodeNullableInt64(d.b)
+	return
+}
+
 func (d *Decoder) Float32() (value float32, err error) {
 	d.b, value, err = decodeFloat32(d.b)
 	return
 }
 
+func (d *Decoder) Float32Ptr() (value *float32, err error) {
+	d.b, value, err = decodeNullableFloat32(d.b)
+	return
+}
+
 func (d *Decoder) Float64() (value float64, err error) {
 	d.b, value, err = decodeFloat64(d.b)
+	return
+}
+
+func (d *Decoder) Float64Ptr() (value *float64, err error) {
+	d.b, value, err = decodeNullableFloat64(d.b)
 	return
 }

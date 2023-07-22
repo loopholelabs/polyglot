@@ -47,6 +47,11 @@ func (e *BufferEncoder) String(value string) *BufferEncoder {
 	return e
 }
 
+func (e *BufferEncoder) StringPtr(value *string) *BufferEncoder {
+	encodeNullableString((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Error(value error) *BufferEncoder {
 	encodeError((*Buffer)(e), value)
 	return e
@@ -57,8 +62,18 @@ func (e *BufferEncoder) Bool(value bool) *BufferEncoder {
 	return e
 }
 
+func (e *BufferEncoder) BoolPtr(value *bool) *BufferEncoder {
+	encodeNullableBool((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Uint8(value uint8) *BufferEncoder {
 	encodeUint8((*Buffer)(e), value)
+	return e
+}
+
+func (e *BufferEncoder) Uint8Ptr(value *uint8) *BufferEncoder {
+	encodeNullableUint8((*Buffer)(e), value)
 	return e
 }
 
@@ -67,8 +82,18 @@ func (e *BufferEncoder) Uint16(value uint16) *BufferEncoder {
 	return e
 }
 
+func (e *BufferEncoder) Uint16Ptr(value *uint16) *BufferEncoder {
+	encodeNullableUint16((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Uint32(value uint32) *BufferEncoder {
 	encodeUint32((*Buffer)(e), value)
+	return e
+}
+
+func (e *BufferEncoder) Uint32Ptr(value *uint32) *BufferEncoder {
+	encodeNullableUint32((*Buffer)(e), value)
 	return e
 }
 
@@ -77,8 +102,18 @@ func (e *BufferEncoder) Uint64(value uint64) *BufferEncoder {
 	return e
 }
 
+func (e *BufferEncoder) Uint64Ptr(value *uint64) *BufferEncoder {
+	encodeNullableUint64((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Int32(value int32) *BufferEncoder {
 	encodeInt32((*Buffer)(e), value)
+	return e
+}
+
+func (e *BufferEncoder) Int32Ptr(value *int32) *BufferEncoder {
+	encodeNullableInt32((*Buffer)(e), value)
 	return e
 }
 
@@ -87,12 +122,27 @@ func (e *BufferEncoder) Int64(value int64) *BufferEncoder {
 	return e
 }
 
+func (e *BufferEncoder) Int64Ptr(value *int64) *BufferEncoder {
+	encodeNullableInt64((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Float32(value float32) *BufferEncoder {
 	encodeFloat32((*Buffer)(e), value)
 	return e
 }
 
+func (e *BufferEncoder) Float32Ptr(value *float32) *BufferEncoder {
+	encodeNullableFloat32((*Buffer)(e), value)
+	return e
+}
+
 func (e *BufferEncoder) Float64(value float64) *BufferEncoder {
 	encodeFloat64((*Buffer)(e), value)
+	return e
+}
+
+func (e *BufferEncoder) Float64Ptr(value *float64) *BufferEncoder {
+	encodeNullableFloat64((*Buffer)(e), value)
 	return e
 }

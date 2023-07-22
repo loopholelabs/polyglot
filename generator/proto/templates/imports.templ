@@ -1,0 +1,9 @@
+{{define "imports"}}
+import (
+    "github.com/loopholelabs/polyglot"
+    "errors"
+    {{range $name, $path := .imports -}}
+        {{ $name }} "{{ $path }}"
+    {{end}}
+)
+{{end}}

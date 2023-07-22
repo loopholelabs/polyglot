@@ -1,0 +1,70 @@
+{{define "encode"}}
+func (x *{{ ProtoName .FullName }}) PolyglotEncode (b *polyglot.Buffer) {
+    if x == nil {
+        polyglot.Encoder(b).Nil()
+    } else {
+        {{ $encoding := GetEncodingFields .Fields -}}
+        {{ if $encoding.Values -}}
+            polyglot.Encoder(b){{ range $val := $encoding.Values -}}{{ $val -}}{{end -}}
+        {{ end -}}
+        {{ if $encoding.SliceFields -}}
+            {{template "encodeSlices" $encoding -}}
+        {{end -}}
+        {{ if $encoding.MessageFields -}}
+        {{template "encodeMessages" $encoding -}}
+        {{end -}}
+    }
+}
+{{end}}
+
+{{define "encodeSlices"}}
+    {{ range $field := .SliceFields -}}
+        {{ $encoder := GetLUTEncoder $field.Kind -}}
+        {{ if and (eq $encoder "") (eq $field.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+        polyglot.Encoder(b).Slice(uint32(len(x.{{ CamelCase $field.Name }})), polyglot.AnyKind)
+        for _, v := range x.{{CamelCase $field.Name}} {
+            v.PolyglotEncode(b)
+        }
+        {{else -}}
+        polyglot.Encoder(b).Slice(uint32(len(x.{{ CamelCase $field.Name }})), {{ GetKindLUT $field.Kind }})
+        for _, v := range x.{{ CamelCase $field.Name }} {
+            polyglot.Encoder(b){{$encoder}}(v)
+        }
+        {{end -}}
+    {{end -}}
+{{end}}
+
+
+{{define "encodeMessages"}}
+    {{ range $field := .MessageFields -}}
+        {{ if $field.IsMap -}}
+        {{ $keyKind := GetKind .MapKey.Kind -}}
+        {{ $valKind := GetKind .MapValue.Kind -}}
+        polyglot.Encoder(b).Map(uint32(len(x)), {{$keyKind}}, {{$valKind}})
+        for k, v := range x.{{ CamelCase $field.Name }}}} {
+            {{ $keyEncoder := GetLUTEncoder .MapKey.Kind -}}
+            {{ if and (eq $keyEncoder "") (eq .MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                k.PolyglotEncode(b)
+            {{else -}}
+                {{ if eq .MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                    polyglot.Encoder(b) {{$keyEncoder}} (uint32(k))
+                {{else -}}
+                    polyglot.Encoder(b) {{$keyEncoder}} (k)
+                {{end -}}
+            {{end -}}
+            {{ $valEncoder := GetLUTEncoder .MapValue.Kind -}}
+            {{ if and (eq $valEncoder "") (eq .MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+                v.PolyglotEncode(b)
+            {{else -}}
+                {{ if eq .MapValue.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                    polyglot.Encoder(b) {{$valEncoder}} (uint32(v))
+                {{else -}}
+                    polyglot.Encoder(b) {{$valEncoder}} (v)
+                {{end -}}
+            {{end -}}
+        }
+        {{ else -}}
+        x.{{ CamelCase $field.Name }}.PolyglotEncode(b)
+        {{ end -}}
+    {{end -}}
+{{end}}

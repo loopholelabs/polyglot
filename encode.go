@@ -95,6 +95,14 @@ func encodeString(b *Buffer, value string) {
 	b.Write(nb)
 }
 
+func encodeNullableString(b *Buffer, value *string) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeString(b, *value)
+	}
+}
+
 func encodeError(b *Buffer, err error) {
 	b.Write(ErrorKind)
 	encodeString(b, err.Error())
@@ -109,9 +117,25 @@ func encodeBool(b *Buffer, value bool) {
 	}
 }
 
+func encodeNullableBool(b *Buffer, value *bool) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeBool(b, *value)
+	}
+}
+
 func encodeUint8(b *Buffer, value uint8) {
 	b.Write(Uint8Kind)
 	*b = append(*b, value)
+}
+
+func encodeNullableUint8(b *Buffer, value *uint8) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeUint8(b, *value)
+	}
 }
 
 // Variable integer encoding with the same format as binary.varint
@@ -126,6 +150,14 @@ func encodeUint16(b *Buffer, value uint16) {
 	*b = append(*b, byte(value))
 }
 
+func encodeNullableUint16(b *Buffer, value *uint16) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeUint16(b, *value)
+	}
+}
+
 func encodeUint32(b *Buffer, value uint32) {
 	b.Write(Uint32Kind)
 	for value >= continuation {
@@ -136,6 +168,14 @@ func encodeUint32(b *Buffer, value uint32) {
 	*b = append(*b, byte(value))
 }
 
+func encodeNullableUint32(b *Buffer, value *uint32) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeUint32(b, *value)
+	}
+}
+
 func encodeUint64(b *Buffer, value uint64) {
 	b.Write(Uint64Kind)
 	for value >= continuation {
@@ -144,6 +184,14 @@ func encodeUint64(b *Buffer, value uint64) {
 		value >>= 7
 	}
 	*b = append(*b, byte(value))
+}
+
+func encodeNullableUint64(b *Buffer, value *uint64) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeUint64(b, *value)
+	}
 }
 
 func encodeInt32(b *Buffer, value int32) {
@@ -161,6 +209,14 @@ func encodeInt32(b *Buffer, value int32) {
 	*b = append(*b, byte(castValue))
 }
 
+func encodeNullableInt32(b *Buffer, value *int32) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeInt32(b, *value)
+	}
+}
+
 func encodeInt64(b *Buffer, value int64) {
 	b.Write(Int64Kind)
 	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
@@ -176,14 +232,38 @@ func encodeInt64(b *Buffer, value int64) {
 	*b = append(*b, byte(castValue))
 }
 
+func encodeNullableInt64(b *Buffer, value *int64) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeInt64(b, *value)
+	}
+}
+
 func encodeFloat32(b *Buffer, value float32) {
 	b.Write(Float32Kind)
 	castValue := math.Float32bits(value)
 	*b = append(*b, byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
 }
 
+func encodeNullableFloat32(b *Buffer, value *float32) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeFloat32(b, *value)
+	}
+}
+
 func encodeFloat64(b *Buffer, value float64) {
 	b.Write(Float64Kind)
 	castValue := math.Float64bits(value)
 	*b = append(*b, byte(castValue>>56), byte(castValue>>48), byte(castValue>>40), byte(castValue>>32), byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
+}
+
+func encodeNullableFloat64(b *Buffer, value *float64) {
+	if value == nil {
+		encodeNil(b)
+	} else {
+		encodeFloat64(b, *value)
+	}
 }
