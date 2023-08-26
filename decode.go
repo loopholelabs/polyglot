@@ -245,11 +245,13 @@ func decodeInt32(b []byte) ([]byte, int32, error) {
 				if i > VarIntLen32 && cb > 1 {
 					return b, 0, InvalidInt32
 				}
-				// End of varint, add the last bits and cast to signed integer
-				x := int32((ux | uint32(cb)<<s) >> 1)
-				// Flip the bits if the sign bit is set
+				// End of varint, add the last bits
+				ux |= uint32(cb) << s
+				// Separate value and sign
+				x := int32(ux >> 1)
+				// If sign bit is set, negate the number
 				if ux&1 != 0 {
-					x = ^x
+					x = -(x + 1)
 				}
 				return b[i+1:], x, nil
 			}
@@ -271,11 +273,13 @@ func decodeInt64(b []byte) ([]byte, int64, error) {
 				if i > VarIntLen64 && cb > 1 {
 					return b, 0, InvalidInt64
 				}
-				// End of varint, add the last bits and cast to signed integer
-				x := int64((ux | uint64(cb)<<s) >> 1)
-				// Flip the bits if the sign bit is set
+				// End of varint, add the last bits
+				ux |= uint64(cb) << s
+				// Separate value and sign
+				x := int64(ux >> 1)
+				// If sign bit is set, negate the number
 				if ux&1 != 0 {
-					x = ^x
+					x = -(x + 1)
 				}
 				return b[i+1:], x, nil
 			}

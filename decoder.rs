@@ -254,9 +254,10 @@ impl Decoder for Cursor<&mut Vec<u8>> {
             for _ in 0..VARINT_LEN32 {
                 let byte = self.read_u8().ok().ok_or(DecodingError::InvalidI32)?;
                 if byte < CONTINUATION {
-                    let mut x = ((ux | (byte as u32) << s) >> 1) as i32;
+                    ux |= (byte as u32) << s;
+                    let mut x = (ux >> 1) as i32;
                     if ux & 1 != 0 {
-                        x = !x
+                        x = -(x + 1)
                     }
                     return Ok(x);
                 }
@@ -277,9 +278,10 @@ impl Decoder for Cursor<&mut Vec<u8>> {
             for _ in 0..VARINT_LEN64 {
                 let byte = self.read_u8().ok().ok_or(DecodingError::InvalidI64)?;
                 if byte < CONTINUATION {
-                    let mut x = ((ux | (byte as u64) << s) >> 1) as i64;
+                    ux |= (byte as u64) << s;
+                    let mut x = (ux >> 1) as i64;
                     if ux & 1 != 0 {
-                        x = !x
+                        x = -(x + 1)
                     }
                     return Ok(x);
                 }

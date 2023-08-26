@@ -456,12 +456,21 @@ func TestDecodeInt32(t *testing.T) {
 	t.Parallel()
 
 	p := NewBuffer()
-	v := int32(-2147483648)
+	v := int32(2147483647)
 	encodeInt32(p, v)
 
 	var value int32
 
 	remaining, value, err := decodeInt32(p.Bytes())
+	assert.NoError(t, err)
+	assert.Equal(t, v, value)
+	assert.Equal(t, 0, len(remaining))
+
+	v = int32(-2147483647)
+	p.Reset()
+	encodeInt32(p, v)
+
+	remaining, value, err = decodeInt32(p.Bytes())
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 	assert.Equal(t, 0, len(remaining))
@@ -491,12 +500,21 @@ func TestDecodeInt64(t *testing.T) {
 	t.Parallel()
 
 	p := NewBuffer()
-	v := int64(-9223372036854775808)
+	v := int64(9223372036854775807)
 	encodeInt64(p, v)
 
 	var value int64
 
 	remaining, value, err := decodeInt64(p.Bytes())
+	assert.NoError(t, err)
+	assert.Equal(t, v, value)
+	assert.Equal(t, 0, len(remaining))
+
+	v = int64(-9223372036854775807)
+	p.Reset()
+	encodeInt64(p, v)
+
+	remaining, value, err = decodeInt64(p.Bytes())
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 	assert.Equal(t, 0, len(remaining))
