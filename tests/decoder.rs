@@ -205,8 +205,8 @@ fn test_decode_u64() {
 #[test]
 fn test_decode_i32() {
     let mut encoder = Cursor::new(Vec::with_capacity(512));
-    let v = 2147483647 as i32;
-    let vneg = -32 as i32;
+    let v = 2147483647;
+    let vneg = -32;
     encoder.encode_i32(v).unwrap();
     encoder.encode_i32(vneg).unwrap();
 
@@ -223,8 +223,8 @@ fn test_decode_i32() {
 #[test]
 fn test_decode_i64() {
     let mut encoder = Cursor::new(Vec::with_capacity(512));
-    let v = 9223372036854775807 as i64;
-    let vneg = -32 as i64;
+    let v = 9223372036854775807;
+    let vneg = -32;
     encoder.encode_i64(v).unwrap();
     encoder.encode_i64(vneg).unwrap();
 

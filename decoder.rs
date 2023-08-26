@@ -257,7 +257,7 @@ impl Decoder for Cursor<&mut Vec<u8>> {
                     ux |= (byte as u32) << s;
                     let mut x = (ux >> 1) as i32;
                     if ux & 1 != 0 {
-                        x = -(x + 1)
+                        x = x.wrapping_add(1).wrapping_neg();
                     }
                     return Ok(x);
                 }
@@ -281,7 +281,7 @@ impl Decoder for Cursor<&mut Vec<u8>> {
                     ux |= (byte as u64) << s;
                     let mut x = (ux >> 1) as i64;
                     if ux & 1 != 0 {
-                        x = -(x + 1)
+                        x = x.wrapping_add(1).wrapping_neg();
                     }
                     return Ok(x);
                 }
@@ -505,12 +505,17 @@ mod tests {
     #[test]
     fn test_decode_i32() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -2147483648 as i32;
+        let v = -2147483648;
+        let vneg = -32;
         encoder.encode_i32(v).unwrap();
+        encoder.encode_i32(vneg).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
         let val = decoder.decode_i32().unwrap();
         assert_eq!(val, v);
+
+        let val = decoder.decode_i32().unwrap();
+        assert_eq!(val, vneg);
 
         let error = decoder.decode_i32().unwrap_err();
         assert_eq!(error, DecodingError::InvalidI32);
