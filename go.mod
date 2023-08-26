@@ -3,8 +3,8 @@ module github.com/loopholelabs/polyglot
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.7.5
-	google.golang.org/protobuf v1.28.0
+	github.com/stretchr/testify v1.8.4
+	google.golang.org/protobuf v1.31.0
 )
 
 require (

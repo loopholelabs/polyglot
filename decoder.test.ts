@@ -149,28 +149,34 @@ describe("Decoder", () => {
   });
 
   it("Can decode Int32", () => {
-    const expected = -2147483648;
+    const expected = 2147483647;
+    const expectedNegative = -2147483647;
 
-    const encoded = new Encoder().int32(expected).bytes;
+    const encoded = new Encoder().int32(expected).int32(expectedNegative).bytes;
     const decoder = new Decoder(encoded);
 
     const value = decoder.int32();
+    const valueNegative = decoder.int32();
 
     expect(value).toBe(expected);
+    expect(valueNegative).toBe(expectedNegative);
     expect(decoder.length).toBe(0);
 
     expect(() => decoder.int32()).toThrowError(InvalidInt32Error);
   });
 
   it("Can decode Int64", () => {
-    const expected = -9223372036854775808n;
+    const expected = 9223372036854775807n;
+    const expectedNegative = -9223372036854775807n;
 
-    const encoded = new Encoder().int64(expected).bytes;
+    const encoded = new Encoder().int64(expected).int64(expectedNegative).bytes;
     const decoder = new Decoder(encoded);
 
     const value = decoder.int64();
+    const valueNegative = decoder.int64();
 
     expect(value).toBe(expected);
+    expect(valueNegative).toBe(expectedNegative);
     expect(decoder.length).toBe(0);
 
     expect(() => decoder.int64()).toThrowError(InvalidInt64Error);
