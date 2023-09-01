@@ -25,7 +25,6 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
-          rustup add component clippy
           rustup add target wasm32-wasi
         shell: bash
       - name: Cargo fmt
