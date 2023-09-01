@@ -49,13 +49,11 @@ mod tests {
         return serde_json::from_slice::<Vec<RawTestData>>(test_data.as_ref())
             .unwrap()
             .into_iter()
-            .map(|td| {
-                return TestData {
-                    name: td.name,
-                    kind: Kind::from(td.kind),
-                    decoded_value: td.decoded_value,
-                    encoded_value: general_purpose::STANDARD.decode(td.encoded_value).unwrap(),
-                };
+            .map(|td| TestData {
+                name: td.name,
+                kind: Kind::from(td.kind),
+                decoded_value: td.decoded_value,
+                encoded_value: general_purpose::STANDARD.decode(td.encoded_value).unwrap(),
             })
             .collect::<Vec<TestData>>();
     }
@@ -72,9 +70,9 @@ mod tests {
                     let val = decoder.decode_none();
 
                     if td.decoded_value.is_null() {
-                        assert_eq!(val, true)
+                        assert!(val)
                     } else {
-                        assert_eq!(val, false)
+                        assert!(!val)
                     }
                 }
 
@@ -105,7 +103,7 @@ mod tests {
                 Kind::U64 => {
                     let val = decoder.decode_u64().unwrap();
 
-                    assert_eq!(val as u64, td.decoded_value.as_u64().unwrap());
+                    assert_eq!({ val }, td.decoded_value.as_u64().unwrap());
                 }
 
                 Kind::I32 => {
@@ -117,23 +115,19 @@ mod tests {
                 Kind::I64 => {
                     let val = decoder.decode_i64().unwrap();
 
-                    assert_eq!(val as i64, td.decoded_value.as_i64().unwrap());
+                    assert_eq!({ val }, td.decoded_value.as_i64().unwrap());
                 }
 
                 Kind::F32 => {
                     let val = decoder.decode_f32().unwrap();
 
-                    assert!(
-                        (val as f32 - td.decoded_value.as_f64().unwrap() as f32) < f32::EPSILON
-                    );
+                    assert!((val - td.decoded_value.as_f64().unwrap() as f32) < f32::EPSILON);
                 }
 
                 Kind::F64 => {
                     let val = decoder.decode_f64().unwrap();
 
-                    assert!(
-                        (val as f64 - td.decoded_value.as_f64().unwrap() as f64) < f64::EPSILON
-                    );
+                    assert!((val - td.decoded_value.as_f64().unwrap()) < f64::EPSILON);
                 }
 
                 Kind::Array => {
@@ -143,7 +137,7 @@ mod tests {
 
                     assert_eq!(expected.len(), len);
 
-                    for (i, _) in expected.into_iter().enumerate() {
+                    for (i, _) in expected.iter().enumerate() {
                         assert_eq!(
                             expected[i].as_str().unwrap(),
                             decoder.decode_string().unwrap()
@@ -278,7 +272,7 @@ mod tests {
                         .encode_f64(td.decoded_value.as_f64().unwrap())
                         .unwrap();
 
-                    for (i, expected) in (&td.encoded_value).into_iter().enumerate() {
+                    for (i, expected) in td.encoded_value.iter().enumerate() {
                         // Ignore last byte; 64-bit float precision
                         if i < td.encoded_value.len() - 1 {
                             assert_eq!(*expected, val.get_ref()[i])
@@ -293,7 +287,7 @@ mod tests {
 
                     let expected = td.decoded_value.as_array().unwrap();
 
-                    for el in expected.into_iter() {
+                    for el in expected.iter() {
                         val = val.encode_str(el.as_str().unwrap()).unwrap();
                     }
 
@@ -313,7 +307,7 @@ mod tests {
 
                     for (expected_key, expected_value) in expected {
                         val = val
-                            .encode_string(&expected_key)
+                            .encode_string(expected_key)
                             .unwrap()
                             .encode_u32(expected_value.as_u64().unwrap() as u32)
                             .unwrap();

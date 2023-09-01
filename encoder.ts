@@ -72,7 +72,7 @@ export class Encoder {
     value: bigint,
     kind: Kind,
     maxBytes: number,
-    signed = false
+    signed = false,
   ) {
     let val = BigInt(value);
     this.resize(maxBytes);

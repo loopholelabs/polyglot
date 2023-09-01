@@ -6,21 +6,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  Rust:
+  cargo:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          components: rustfmt, clippy
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+        shell: bash
       - name: Cargo build
         run: cargo build --release
       - name: Publish to crates.io
-        run: cargo publish
+        run: cargo publish --token $CARGO_REGISTRY_TOKEN
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   Typescript:
@@ -31,7 +30,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "20"
           registry-url: "https://registry.npmjs.org"
       - name: Cache the Node Modules Directory
         uses: actions/cache@v3

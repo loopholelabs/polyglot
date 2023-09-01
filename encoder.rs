@@ -55,6 +55,7 @@ pub trait Encoder {
     fn encode_bytes(self, val: &[u8]) -> Result<Self, EncodingError>
     where
         Self: Sized;
+    #[allow(clippy::ptr_arg)]
     fn encode_string(self, val: &String) -> Result<Self, EncodingError>
     where
         Self: Sized;
@@ -372,7 +373,7 @@ mod tests {
     #[test]
     fn test_encode_i64() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -9223372036854775808 as i64;
+        let v = -9223372036854775808_i64;
         let e = [255, 255, 255, 255, 255, 255, 255, 255, 255, 1];
         encoder.encode_i64(v).unwrap();
 
@@ -382,7 +383,7 @@ mod tests {
     #[test]
     fn test_encode_f32() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -214648.34432 as f32;
+        let v = -214_648.34_f32;
         let e = [0xC8, 0x51, 0x9E, 0x16];
         encoder.encode_f32(v).unwrap();
 
