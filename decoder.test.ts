@@ -36,7 +36,7 @@ import { Encoder } from "./encoder";
 import { Kind } from "./kind";
 
 window.TextEncoder = TextEncoder;
-window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+window.TextDecoder = TextDecoder as (typeof window)["TextDecoder"];
 
 describe("Decoder", () => {
   it("Can decode Null", () => {
@@ -262,7 +262,7 @@ describe("Decoder", () => {
     expect(decoder.length).toBe(0);
 
     expect(() => decoder.map(Kind.String, Kind.Uint32)).toThrowError(
-      InvalidMapError
+      InvalidMapError,
     );
   });
 
@@ -309,7 +309,7 @@ describe("Decoder", () => {
     expect(() => {
       const encodedWithMissingStringKind = new Encoder().error(expected).bytes;
       const decoderMissingStringKind = new Decoder(
-        encodedWithMissingStringKind
+        encodedWithMissingStringKind,
       );
 
       encodedWithMissingStringKind[1] = 999999;

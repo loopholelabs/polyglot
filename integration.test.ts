@@ -22,7 +22,7 @@ import { Encoder } from "./encoder";
 import { Kind } from "./kind";
 
 window.TextEncoder = TextEncoder;
-window.TextDecoder = TextDecoder as typeof window["TextDecoder"];
+window.TextDecoder = TextDecoder as (typeof window)["TextDecoder"];
 
 interface ITestData {
   name: string;
@@ -35,7 +35,7 @@ const base64ToUint8Array = (base64: string) => {
   const buf = Buffer.from(base64, "base64");
 
   return new Uint8Array(
-    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+    buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
   );
 };
 
@@ -44,7 +44,7 @@ describe("Integration test", () => {
 
   beforeAll(async () => {
     const rawTestData = JSONBigint.parse(
-      await fs.readFile("./integration-test-data.json", "utf8")
+      await fs.readFile("./integration-test-data.json", "utf8"),
     );
 
     testData = (rawTestData as any[]).map((el: any) => ({
@@ -197,7 +197,7 @@ describe("Integration test", () => {
 
         default:
           throw new Error(
-            `Unimplemented decoder for kind ${v.kind} and test ${v.name}`
+            `Unimplemented decoder for kind ${v.kind} and test ${v.name}`,
           );
       }
     });
@@ -289,7 +289,7 @@ describe("Integration test", () => {
         case Kind.Array: {
           const encoded = new Encoder().array(
             v.decodedValue.length,
-            Kind.String
+            Kind.String,
           );
           v.decodedValue.forEach((el: string) => {
             encoded.string(el);
@@ -304,7 +304,7 @@ describe("Integration test", () => {
           const encoded = new Encoder().map(
             Object.keys(v.decodedValue).length,
             Kind.String,
-            Kind.Uint32
+            Kind.Uint32,
           );
           Object.entries(v.decodedValue)
             .sort(([prevKey], [currKey]) => prevKey.localeCompare(currKey))
@@ -320,7 +320,7 @@ describe("Integration test", () => {
 
         case Kind.Uint8Array: {
           const encoded = new Encoder().uint8Array(
-            base64ToUint8Array(v.decodedValue)
+            base64ToUint8Array(v.decodedValue),
           );
 
           expect(encoded.bytes).toEqual(v.encodedValue);
@@ -346,7 +346,7 @@ describe("Integration test", () => {
 
         default:
           throw new Error(
-            `Unimplemented encoder for kind ${v.kind} and test ${v.name}`
+            `Unimplemented encoder for kind ${v.kind} and test ${v.name}`,
           );
       }
     });

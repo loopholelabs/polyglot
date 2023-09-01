@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v1.1.3] - 2023-09-01
+
+### Features
+
+- Added Durable Errors for Decoders ([#28](https://github.com/loopholelabs/polyglot/pull/28))
+
 ## [v1.1.2] - 2023-08-26
 
 ### Fixes
@@ -33,7 +39,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Merging Typescript, Golang, and Rust implementations into a single repository
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.2...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.3...HEAD
+[v1.1.3]: https://github.com/loopholelabs/scale/compare/v1.1.3
 [v1.1.2]: https://github.com/loopholelabs/scale/compare/v1.1.2
 [v1.1.1]: https://github.com/loopholelabs/scale/compare/v1.1.1
 [v1.1.0]: https://github.com/loopholelabs/scale/compare/v1.1.0
