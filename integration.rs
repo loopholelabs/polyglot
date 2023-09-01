@@ -121,13 +121,13 @@ mod tests {
                 Kind::F32 => {
                     let val = decoder.decode_f32().unwrap();
 
-                    assert!((val - td.decoded_value.as_f64().unwrap() as f32).abs() < f32::EPSILON);
+                    assert!((val - td.decoded_value.as_f64().unwrap() as f32) < f32::EPSILON);
                 }
 
                 Kind::F64 => {
                     let val = decoder.decode_f64().unwrap();
 
-                    assert!((val - td.decoded_value.as_f64().unwrap()).abs() < f64::EPSILON);
+                    assert!((val - td.decoded_value.as_f64().unwrap()) < f64::EPSILON);
                 }
 
                 Kind::Array => {
