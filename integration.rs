@@ -49,13 +49,11 @@ mod tests {
         return serde_json::from_slice::<Vec<RawTestData>>(test_data.as_ref())
             .unwrap()
             .into_iter()
-            .map(|td| {
-                TestData {
-                    name: td.name,
-                    kind: Kind::from(td.kind),
-                    decoded_value: td.decoded_value,
-                    encoded_value: general_purpose::STANDARD.decode(td.encoded_value).unwrap(),
-                }
+            .map(|td| TestData {
+                name: td.name,
+                kind: Kind::from(td.kind),
+                decoded_value: td.decoded_value,
+                encoded_value: general_purpose::STANDARD.decode(td.encoded_value).unwrap(),
             })
             .collect::<Vec<TestData>>();
     }
@@ -123,17 +121,13 @@ mod tests {
                 Kind::F32 => {
                     let val = decoder.decode_f32().unwrap();
 
-                    assert!(
-                        (val - td.decoded_value.as_f64().unwrap() as f32).abs() < f32::EPSILON
-                    );
+                    assert!((val - td.decoded_value.as_f64().unwrap() as f32).abs() < f32::EPSILON);
                 }
 
                 Kind::F64 => {
                     let val = decoder.decode_f64().unwrap();
 
-                    assert!(
-                        (val - td.decoded_value.as_f64().unwrap()).abs() < f64::EPSILON
-                    );
+                    assert!((val - td.decoded_value.as_f64().unwrap()).abs() < f64::EPSILON);
                 }
 
                 Kind::Array => {
