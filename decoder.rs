@@ -75,14 +75,11 @@ pub trait Decoder {
 
 impl Decoder for Cursor<&mut Vec<u8>> {
     fn decode_none(&mut self) -> bool {
-        match self.read_u8() {
-            Ok(kind) => {
-                if kind == Kind::None as u8 {
-                    return true;
-                }
-                self.set_position(self.position() - 1);
+        if let Ok(kind) = self.read_u8() {
+            if kind == Kind::None as u8 {
+                return true;
             }
-            Err(_) => {}
+            self.set_position(self.position() - 1);
         }
         false
     }
@@ -331,10 +328,10 @@ mod tests {
 
         let mut decoder = Cursor::new(encoder.get_mut());
         let val = decoder.decode_none();
-        assert_eq!(val, true);
+        assert!(val);
         assert_eq!(decoder.get_ref().len() - decoder.position() as usize, 0);
         let next_val = decoder.decode_none();
-        assert_eq!(next_val, false);
+        assert!(!next_val);
     }
 
     #[test]
@@ -348,7 +345,7 @@ mod tests {
         }
 
         let mut decoder = Cursor::new(encoder.get_mut());
-        let size = decoder.decode_array(Kind::String).unwrap() as usize;
+        let size = decoder.decode_array(Kind::String).unwrap();
         assert_eq!(size, m.len());
 
         let mut mv: Vec<String> = Vec::with_capacity(size);
@@ -379,7 +376,7 @@ mod tests {
         }
 
         let mut decoder = Cursor::new(encoder.get_mut());
-        let size = decoder.decode_map(Kind::String, Kind::U32).unwrap() as usize;
+        let size = decoder.decode_map(Kind::String, Kind::U32).unwrap();
         assert_eq!(size, m.len());
 
         let mut mv = HashMap::new();
@@ -440,7 +437,7 @@ mod tests {
 
         let mut decoder = Cursor::new(encoder.get_mut());
         let val = decoder.decode_bool().unwrap();
-        assert_eq!(val, true);
+        assert!(val);
 
         let error = decoder.decode_bool().unwrap_err();
         assert_eq!(error, DecodingError::InvalidBool);
@@ -449,7 +446,7 @@ mod tests {
     #[test]
     fn test_decode_u8() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = 32 as u8;
+        let v = 32_u8;
         encoder.encode_u8(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -463,7 +460,7 @@ mod tests {
     #[test]
     fn test_decode_u16() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = 1024 as u16;
+        let v = 1024_u16;
         encoder.encode_u16(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -477,7 +474,7 @@ mod tests {
     #[test]
     fn test_decode_u32() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = 4294967290 as u32;
+        let v = 4294967290_u32;
         encoder.encode_u32(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -491,7 +488,7 @@ mod tests {
     #[test]
     fn test_decode_u64() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = 18446744073709551610 as u64;
+        let v = 18446744073709551610_u64;
         encoder.encode_u64(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -524,7 +521,7 @@ mod tests {
     #[test]
     fn test_decode_i64() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -9223372036854775808 as i64;
+        let v = -9223372036854775808_i64;
         encoder.encode_i64(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -538,7 +535,7 @@ mod tests {
     #[test]
     fn test_decode_f32() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -2147483.648 as f32;
+        let v = -2_147_483.8_f32;
         encoder.encode_f32(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
@@ -552,7 +549,7 @@ mod tests {
     #[test]
     fn test_decode_f64() {
         let mut encoder = Cursor::new(Vec::with_capacity(512));
-        let v = -922337203.477580 as f64;
+        let v = -922337203.477580_f64;
         encoder.encode_f64(v).unwrap();
 
         let mut decoder = Cursor::new(encoder.get_mut());
