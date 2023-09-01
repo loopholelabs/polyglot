@@ -189,7 +189,7 @@ describe("Encoder", () => {
     expect(encoded.length).toBe(1 + 1 + 1 + expected.length);
     expect(encoded[0]).toBe(Kind.String);
     expect(encoded.slice(6).buffer).toEqual(
-      new TextEncoder().encode(expected).buffer
+      new TextEncoder().encode(expected).buffer,
     );
   });
 
@@ -201,7 +201,7 @@ describe("Encoder", () => {
     expect(encoded.length).toBe(1 + 1 + 1 + 1 + expected.message.length);
     expect(encoded[0]).toBe(Kind.Error);
     expect(encoded.slice(6).buffer).toEqual(
-      new TextEncoder().encode(expected.message).buffer
+      new TextEncoder().encode(expected.message).buffer,
     );
   });
 });

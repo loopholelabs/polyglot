@@ -139,7 +139,7 @@ export class InvalidErrorError extends Error {
 export class Decoder {
   #pos = 0;
 
-  constructor(private buf: Uint8Array) {
+  constructor(private readonly buf: Uint8Array) {
     this.buf = buf;
   }
 
@@ -151,6 +151,13 @@ export class Decoder {
     const val = this.buf[this.#pos];
     this.#pos += 1;
     return val;
+  }
+
+  private validateKind(expected: Kind, Err: new () => Error) {
+    if ((this.peek() as Kind) !== expected) {
+      throw new Err();
+    }
+    this.#pos += 1;
   }
 
   get length(): number {
@@ -193,22 +200,16 @@ export class Decoder {
   }
 
   boolean(): boolean {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Boolean) {
-      throw new InvalidBooleanError();
-    }
+    this.validateKind(Kind.Boolean, InvalidBooleanError);
     return this.pop() === BOOLEAN_TRUE;
   }
 
   uint8(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Uint8) {
-      throw new InvalidUint8Error();
-    }
+    this.validateKind(Kind.Uint8, InvalidUint8Error);
     const dataView = new DataView(
       this.buf.buffer,
       this.buf.byteOffset + this.#pos,
-      1
+      1,
     );
     const val = dataView.getUint8(0);
     this.#pos += 1;
@@ -216,11 +217,7 @@ export class Decoder {
   }
 
   uint16(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Uint16) {
-      throw new InvalidUint16Error();
-    }
-
+    this.validateKind(Kind.Uint16, InvalidUint16Error);
     let num = 0;
     let shift = 0;
     for (let i = 1; i < MAXLEN16 + 1; i += 1) {
@@ -235,50 +232,31 @@ export class Decoder {
   }
 
   uint32(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Uint32) {
-      throw new InvalidUint32Error();
-    }
-
+    this.validateKind(Kind.Uint32, InvalidUint32Error);
     return Number(this.varint(MAXLEN32));
   }
 
   uint64(): bigint {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Uint64) {
-      throw new InvalidUint64Error();
-    }
-
+    this.validateKind(Kind.Uint64, InvalidUint64Error);
     return this.varint(MAXLEN64);
   }
 
   int32(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Int32) {
-      throw new InvalidInt32Error();
-    }
-
+    this.validateKind(Kind.Int32, InvalidInt32Error);
     return Number(this.varint(MAXLEN32, true));
   }
 
   int64(): bigint {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Int64) {
-      throw new InvalidInt64Error();
-    }
-
+    this.validateKind(Kind.Int64, InvalidInt64Error);
     return this.varint(MAXLEN64, true);
   }
 
   float32(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Float32) {
-      throw new InvalidFloat32Error();
-    }
+    this.validateKind(Kind.Float32, InvalidFloat32Error);
     const dataView = new DataView(
       this.buf.buffer,
       this.buf.byteOffset + this.#pos,
-      4
+      4,
     );
     const val = dataView.getFloat32(0);
     this.#pos += 4;
@@ -286,14 +264,11 @@ export class Decoder {
   }
 
   float64(): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Float64) {
-      throw new InvalidFloat64Error();
-    }
+    this.validateKind(Kind.Float64, InvalidFloat64Error);
     const dataView = new DataView(
       this.buf.buffer,
       this.buf.byteOffset + this.#pos,
-      8
+      8,
     );
     const val = dataView.getFloat64(0);
     this.#pos += 8;
@@ -301,44 +276,20 @@ export class Decoder {
   }
 
   array(valueKind: Kind): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Array) {
-      throw new InvalidArrayError();
-    }
-
-    const definedValueKind = this.pop() as Kind;
-    if (!(definedValueKind in Kind) || valueKind !== definedValueKind) {
-      throw new InvalidArrayError();
-    }
-
+    this.validateKind(Kind.Array, InvalidArrayError);
+    this.validateKind(valueKind, InvalidArrayError);
     return this.uint32();
   }
 
   map(keyKind: Kind, valueKind: Kind): number {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Map) {
-      throw new InvalidMapError();
-    }
-
-    const definedKeyKind = this.pop() as Kind;
-    if (!(definedKeyKind in Kind) || keyKind !== definedKeyKind) {
-      throw new InvalidMapError();
-    }
-
-    const definedValueKind = this.pop() as Kind;
-    if (!(valueKind in Kind) || valueKind !== definedValueKind) {
-      throw new InvalidMapError();
-    }
-
+    this.validateKind(Kind.Map, InvalidMapError);
+    this.validateKind(keyKind, InvalidMapError);
+    this.validateKind(valueKind, InvalidMapError);
     return this.uint32();
   }
 
   uint8Array(): Uint8Array {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Uint8Array) {
-      throw new InvalidUint8ArrayError();
-    }
-
+    this.validateKind(Kind.Uint8Array, InvalidUint8ArrayError);
     const size = this.uint32();
     const value = this.buf.slice(this.#pos, this.#pos + size);
     this.#pos += size;
@@ -346,25 +297,17 @@ export class Decoder {
   }
 
   string(): string {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.String) {
-      throw new InvalidStringError();
-    }
-
+    this.validateKind(Kind.String, InvalidStringError);
     const size = this.uint32();
     const value = new TextDecoder().decode(
-      this.buf.slice(this.#pos, this.#pos + size)
+      this.buf.slice(this.#pos, this.#pos + size),
     );
     this.#pos += size;
     return value;
   }
 
   error(): Error {
-    const kind = this.pop() as Kind;
-    if (kind !== Kind.Error) {
-      throw new InvalidErrorError();
-    }
-
+    this.validateKind(Kind.Error, InvalidErrorError);
     const nestedType = this.pop() as Kind;
     if (nestedType !== Kind.String) {
       throw new InvalidErrorError();
@@ -372,7 +315,7 @@ export class Decoder {
 
     const size = this.uint32();
     const value = new Error(
-      new TextDecoder().decode(this.buf.slice(this.#pos, this.#pos + size))
+      new TextDecoder().decode(this.buf.slice(this.#pos, this.#pos + size)),
     );
     this.#pos += size;
     return value;
