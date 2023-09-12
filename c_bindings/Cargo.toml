@@ -10,7 +10,8 @@ keywords = ["polyglot", "serialization", "deserialization", "encoding", "decodin
 
 [lib]
 path = "lib.rs"
-crate-type = ["cdylib", "staticlib"]
+name = "polyglot"
+crate-type = ["cdylib"]
 
 [dependencies]
 polyglot_rs = { path = "../" }
