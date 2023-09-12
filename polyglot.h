@@ -24,23 +24,40 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #define POLYGLOT_VERSION_MAJOR        1
 #define POLYGLOT_VERSION_MINOR        1
 #define POLYGLOT_VERSION_MICRO        3
 
-#define POLYGLOT_VERSION              \
+#define POLYGLOT_VERSION                \
     ((POLYGLOT_VERSION_MAJOR * 10000) + \
-     (POLYGLOT_VERSION_MINOR * 100) + \
+     (POLYGLOT_VERSION_MINOR * 100) +   \
      POLYGLOT_VERSION_MICRO)
 
-#define POLYGLOT_PASS           0
-#define POLYGLOT_FAIL           1
-#define POLYGLOT_NULL_POINTER   2
+#ifdef POLYGLOT_USE_C_ENUMS
+# define _C_ENUM_THUNK(key, val) key = val,
+# define DEFINE_ENUM(name, cb)			\
+	typedef enum name : uint8_t {	    \
+		cb(_C_ENUM_THUNK)				\
+	} name ## _t;
+#else
+# define _C_CONST_THUNK(key, val) static const uint8_t key = val;
+# define DEFINE_ENUM(name, cb)          \
+	cb(_C_CONST_THUNK)                  \
+		typedef uint8_t name ## _t;
+#endif
+
+#define STATUS_VALUES(_)                 \
+    _(POLYGLOT_STATUS_PASS, 0)           \
+    _(POLYGLOT_STATUS_FAILURE, 1)        \
+    _(POLYGLOT_STATUS_NULL_PTR,  2)      \
+
+DEFINE_ENUM(polyglot_status, STATUS_VALUES)
 
 struct encoder;
 
-int encoder_new(struct encoder **encoder);
+polyglot_status_t encoder_new(struct encoder **encoder);
 void encoder_free(struct encoder *encoder);
 
 #ifdef __cplusplus

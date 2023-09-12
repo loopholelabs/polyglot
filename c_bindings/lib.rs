@@ -15,10 +15,14 @@
 */
 
 use std::io::Cursor;
+use crate::PolyglotStatus::{NullPointer, Pass};
 
-const PASS: u32 = 0x00;
-const FAIL: u32 = 0x01;
-const NULL_POINTER: u32 = 0x02;
+#[repr(u8)]
+pub enum PolyglotStatus {
+    Pass,
+    Fail,
+    NullPointer,
+}
 
 pub struct Encoder {
     cursor: Cursor<Vec<u8>>,
@@ -34,9 +38,9 @@ impl Encoder {
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn encoder_new(encoder: *mut *mut Encoder) -> u32 {
+pub extern "C" fn encoder_new(encoder: *mut *mut Encoder) -> PolyglotStatus {
     if encoder.is_null() {
-        return NULL_POINTER;
+        return PolyglotStatus::NullPointer;
     }
 
     unsafe {
@@ -47,7 +51,7 @@ pub extern "C" fn encoder_new(encoder: *mut *mut Encoder) -> u32 {
         *encoder = Box::into_raw(Box::new(Encoder::new()));
     }
 
-    PASS
+    PolyglotStatus::Pass
 }
 
 #[no_mangle]
