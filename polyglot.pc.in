@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=@LIBDIR@
+includedir=@INCLUDE_DIR@/
+
+Name: polyglot
+Version: @_VERSION_MAJOR@.@_VERSION_MINOR@.@_VERSION_MICRO@
+Description: Polyglot C/C++ Bindings
+Requires:
+Libs: -L${libdir} -lpolyglot
+Cflags: -I${includedir}
