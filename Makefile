@@ -30,7 +30,7 @@ RELEASE ?=0
 
 .PHONY: clib_debug
 clib_debug:
-	cd c_bindings && cargo build --all && ([ -f ./target/debug/$(CLIB_SO).dylib ] && (echo "DYLIB exists, copying" && cp ./target/debug/$(CLIB_SO).dylib  ./target/debug/$(CLIB_SO_DEV)) || echo "DYLIB does not exist, ignoring") && ln -sfv $(CLIB_SO_DEV) target/debug/$(CLIB_SO_FULL) && ln -sfv $(CLIB_SO_DEV) target/debug/$(CLIB_SO_MAN) && cd -
+	cd c_bindings && cargo build --all && ([ -f ./target/debug/$(CLIB_SO).dylib ] && (echo "DYLIB exists, copying" && cp ./target/debug/$(CLIB_SO).dylib  ./target/debug/$(CLIB_SO_DEV)) || echo "DYLIB does not exist, ignoring") && ln -sfv target/debug/$(CLIB_SO_DEV) target/debug/$(CLIB_SO_FULL) && ln -sfv target/debug/$(CLIB_SO_DEV) target/debug/$(CLIB_SO_MAN) && cd -
 
 $(CLIB_SO_DEV_RELEASE):
 	cd c_bindings && cargo build --all --release && ([ -f ./target/release/$(CLIB_SO).dylib ] && (echo "DYLIB exists, copying" && cp ./target/release/$(CLIB_SO).dylib  ./target/release/$(CLIB_SO_DEV)) || echo "DYLIB does not exist, ignoring") && cd -
@@ -63,10 +63,9 @@ $(CLIB_PKG_CONFIG): $(CLIB_PKG_CONFIG).in
 clib_test: $(CLIB_SO_DEV_DEBUG) $(CLIB_HEADER)
 	$(eval TMPDIR := $(shell mktemp -d))
 	cp $(CLIB_SO_DEV_DEBUG) $(TMPDIR)/$(CLIB_SO_FULL)
-	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_MAN)
-	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_DEV)
+	ln -sfv $(TMPDIR)/$(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_MAN)
+	ln -sfv $(TMPDIR)/$(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_DEV)
 	cp $(CLIB_HEADER) $(TMPDIR)/$(shell basename $(CLIB_HEADER))
-	ls -a $(TMPDIR)
 	gcc -g -Wall -Wextra -L$(TMPDIR) -I$(TMPDIR) -o $(TMPDIR)/polyglot_test c_bindings/tests/polyglot_test.c -lpolyglot
 	$(TMPDIR)/polyglot_test
 	rm -rf $(TMPDIR)
