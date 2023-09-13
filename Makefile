@@ -66,7 +66,7 @@ clib_test: $(CLIB_SO_DEV_DEBUG) $(CLIB_HEADER)
 	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_MAN)
 	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_DEV)
 	cp $(CLIB_HEADER) $(TMPDIR)/$(shell basename $(CLIB_HEADER))
-	gcc -g -Wall -Wextra -L$(TMPDIR) -I$(TMPDIR) -o $(TMPDIR)/polyglot_test c_bindings/tests/polyglot_test.c -lpolyglot
+	cc -g -Wall -Wextra -L$(TMPDIR) -I$(TMPDIR) -o $(TMPDIR)/polyglot_test c_bindings/tests/polyglot_test.c -lpolyglot
 	$(TMPDIR)/polyglot_test
 	rm -rf $(TMPDIR)
 
