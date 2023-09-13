@@ -16,9 +16,6 @@ crate-type = ["cdylib"]
 [dependencies]
 polyglot_rs = { path = "../" }
 
-[build-dependencies]
-cbindgen = "0.24.0"
-
 [profile.release]
 opt-level = 3
 lto = true

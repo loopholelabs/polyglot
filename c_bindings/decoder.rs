@@ -14,11 +14,14 @@
     limitations under the License.
 */
 
-use crate::kind;
-use kind::PolyglotStatus;
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
+use crate::types;
+use types::PolyglotKind;
+use types::PolyglotStatus;
 
 use std::ffi::{c_char, c_uint, CString};
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 use polyglot_rs::{Decoder as PolyglotDecoder};
 
 #[repr(C)]
@@ -27,33 +30,90 @@ pub struct Decoder {
     cursor: Cursor<Vec<u8>>,
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_new_decoder(decoder: *mut *mut Decoder, buffer_pointer: *mut c_char, buffer_size: c_uint) -> PolyglotStatus {
-    if decoder.is_null() {
-        return PolyglotStatus::NullPointer;
-    }
+pub extern "C" fn polyglot_new_decoder(status: *mut PolyglotStatus, buffer_pointer: *mut c_char, buffer_size: c_uint) -> *mut Decoder {
+    PolyglotStatus::check_not_null(status);
 
     if buffer_pointer.is_null() {
-        return PolyglotStatus::NullPointer;
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return std::ptr::null_mut();
     }
 
     unsafe {
         let buffer = std::slice::from_raw_parts_mut(buffer_pointer as *mut u8, buffer_size as usize);
-        *decoder = Box::into_raw(Box::new(Decoder {
+        *status = PolyglotStatus::Pass;
+        Box::into_raw(Box::new(Decoder {
             cursor: Cursor::new(buffer.to_vec()),
-        }));
-    }
-
-    PolyglotStatus::Pass
-}
-
-impl Decoder {
-    fn decode_none(&mut self) -> bool {
-        self.cursor.decode_none()
-    }
-
-    fn decode_array(&mut self, val_kind: polyglot_rs::Kind) -> Result<usize, polyglot_rs::DecodingError> {
-        self.cursor.decode_array(val_kind)
+        }))
     }
 }
+
+#[no_mangle]
+pub extern "C" fn polyglot_free_decoder(decoder: *mut Decoder) {
+    if !decoder.is_null() {
+        unsafe {
+            drop(Box::from_raw(decoder));
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_none(status: *mut PolyglotStatus, decoder: *mut Decoder) -> bool {
+    PolyglotStatus::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+    }
+
+    unsafe {
+        (*decoder).cursor.decode_none()
+    }
+}
+
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_string(status: *mut PolyglotStatus, decoder: *mut Decoder) -> *mut c_char{
+    PolyglotStatus::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return std::ptr::null_mut();
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_string() {
+            Ok(value) => {
+                return match CString::new(value) {
+                    Ok(c_string) => {
+                        *status = PolyglotStatus::Pass;
+                        c_string.into_raw()
+                    }
+                    Err(_) => {
+                        *status = PolyglotStatus::Fail;
+                        std::ptr::null_mut()
+                    }
+                };
+            },
+            Err(_) => {
+                *status = PolyglotStatus::Fail;
+                std::ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_free_decode_string(c_string: *mut c_char) {
+    unsafe {
+        if !c_string.is_null() {
+            drop(CString::from_raw(c_string))
+        }
+    };
+}
+

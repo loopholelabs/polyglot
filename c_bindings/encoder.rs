@@ -14,9 +14,11 @@
     limitations under the License.
 */
 
-use crate::kind;
-use kind::PolyglotKind;
-use kind::PolyglotStatus;
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
+use crate::types;
+use types::PolyglotKind;
+use types::PolyglotStatus;
 
 use std::ffi::{c_char, c_uint, CStr};
 use std::io::{Cursor, Write};
@@ -28,26 +30,27 @@ pub struct Encoder {
     cursor: Cursor<Vec<u8>>,
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_new_encoder(encoder: *mut *mut Encoder) -> PolyglotStatus {
-    if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
-    }
+pub extern "C" fn polyglot_new_encoder(status: *mut PolyglotStatus) -> *mut Encoder {
+    PolyglotStatus::check_not_null(status);
 
     unsafe {
-        *encoder = Box::into_raw(Box::new(Encoder {
-            cursor: Cursor::new(Vec::new()),
-        }));
+        *status = PolyglotStatus::Pass;
     }
 
-    PolyglotStatus::Pass
+    Box::into_raw(Box::new(Encoder {
+        cursor: Cursor::new(Vec::new()),
+    }))
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encoder_size(encoder: *mut Encoder) -> c_uint {
+pub extern "C" fn polyglot_encoder_size(status: *mut PolyglotStatus, encoder: *mut Encoder) -> c_uint {
+    PolyglotStatus::check_not_null(status);
+
     if encoder.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
         return 0;
     }
 
@@ -56,31 +59,35 @@ pub extern "C" fn polyglot_encoder_size(encoder: *mut Encoder) -> c_uint {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encoder_buffer(encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) -> PolyglotStatus {
-    if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
-    }
+pub extern "C" fn polyglot_encoder_buffer(status: *mut PolyglotStatus, encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) {
+    PolyglotStatus::check_not_null(status);
 
-    if buffer_pointer.is_null() {
-        return PolyglotStatus::NullPointer;
+    if encoder.is_null() || buffer_pointer.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return;
     }
 
     unsafe {
         if buffer_size < (*encoder).cursor.get_ref().len() as c_uint {
-            return PolyglotStatus::Fail;
+            *status = PolyglotStatus::Fail;
+            return;
         }
 
         let mut buffer = std::slice::from_raw_parts_mut(buffer_pointer as *mut u8, buffer_size as usize);
         match buffer.write((*encoder).cursor.get_ref().as_slice()) {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+            Ok(_) => {
+                *status = PolyglotStatus::Pass;
+            },
+            Err(_) => {
+                *status = PolyglotStatus::Fail;
+            },
         }
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
 pub extern "C" fn polyglot_free_encoder(encoder: *mut Encoder) {
     if !encoder.is_null() {
@@ -90,86 +97,125 @@ pub extern "C" fn polyglot_free_encoder(encoder: *mut Encoder) {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encode_none(encoder: *mut Encoder) -> PolyglotStatus {
+pub extern "C" fn polyglot_encode_none(status: *mut PolyglotStatus, encoder: *mut Encoder) {
+    PolyglotStatus::check_not_null(status);
+
     if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
+        unsafe {
+            *status = PolyglotStatus::NullPointer
+        }
+        return;
     }
 
     unsafe {
         match (*encoder).cursor.encode_none() {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+            Ok(_) => {
+                *status = PolyglotStatus::Pass
+            },
+            Err(_) => {
+                *status = PolyglotStatus::Fail
+            },
         }
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encode_array(encoder: *mut Encoder, array_size: c_uint, array_kind: PolyglotKind) -> PolyglotStatus {
+pub extern "C" fn polyglot_encode_array(status: *mut PolyglotStatus, encoder: *mut Encoder, array_size: c_uint, array_kind: PolyglotKind) {
+    PolyglotStatus::check_not_null(status);
+
     if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return;
     }
 
     unsafe {
-        match (*encoder).cursor.encode_array(array_size as usize, array_kind.into_polyglot()) {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+        match (*encoder).cursor.encode_array(array_size as usize, array_kind.into()) {
+            Ok(_) => {
+                *status = PolyglotStatus::Pass
+            },
+            Err(_) => {
+                *status = PolyglotStatus::Fail
+            },
         }
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encode_map(encoder: *mut Encoder, map_size: c_uint, key_kind: PolyglotKind, value_kind: PolyglotKind) -> PolyglotStatus {
+pub extern "C" fn polyglot_encode_map(status: *mut PolyglotStatus, encoder: *mut Encoder, map_size: c_uint, key_kind: PolyglotKind, value_kind: PolyglotKind) {
+    PolyglotStatus::check_not_null(status);
+
     if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return;
     }
 
     unsafe {
-        match (*encoder).cursor.encode_map(map_size as usize, key_kind.into_polyglot(), value_kind.into_polyglot()) {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+        match (*encoder).cursor.encode_map(map_size as usize, key_kind.into(), value_kind.into()) {
+            Ok(_) => {
+                *status = PolyglotStatus::Pass
+            },
+            Err(_) =>  {
+                *status = PolyglotStatus::Fail;
+            },
         }
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encode_bytes(encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) -> PolyglotStatus {
-    if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
-    }
+pub extern "C" fn polyglot_encode_bytes(status: *mut PolyglotStatus, encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) {
+    PolyglotStatus::check_not_null(status);
 
-    if buffer_pointer.is_null() {
-        return PolyglotStatus::NullPointer;
+    if encoder.is_null() || buffer_pointer.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return;
     }
 
     unsafe {
         let buffer = std::slice::from_raw_parts_mut(buffer_pointer as *mut u8, buffer_size as usize);
         match (*encoder).cursor.encode_bytes(buffer) {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+            Ok(_) => {
+                *status = PolyglotStatus::Pass
+            },
+            Err(_) =>  {
+                *status = PolyglotStatus::Fail;
+            },
         }
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
-pub extern "C" fn polyglot_encode_string(encoder: *mut Encoder, string_pointer: *const c_char) -> PolyglotStatus {
+pub extern "C" fn polyglot_encode_string(status: *mut PolyglotStatus, encoder: *mut Encoder, string_pointer: *const c_char) {
+    PolyglotStatus::check_not_null(status);
+
     if encoder.is_null() {
-        return PolyglotStatus::NullPointer;
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+        return;
     }
 
     unsafe {
-        let string = match CStr::from_ptr(string_pointer).to_str() {
-            Ok(string) => string,
-            Err(_) => return PolyglotStatus::Fail,
+        let c_str = match CStr::from_ptr(string_pointer).to_str() {
+            Ok(c_str) => c_str,
+            Err(_) => {
+                *status = PolyglotStatus::Fail;
+                return;
+            },
         };
-        match (*encoder).cursor.encode_str(string) {
-            Ok(_) => PolyglotStatus::Pass,
-            Err(_) => PolyglotStatus::Fail,
+        match (*encoder).cursor.encode_str(c_str) {
+            Ok(_) => {
+                *status = PolyglotStatus::Pass
+            },
+            Err(_) =>  {
+                *status = PolyglotStatus::Fail;
+            },
         }
     }
 }

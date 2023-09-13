@@ -14,6 +14,6 @@
     limitations under the License.
 */
 
-pub mod kind;
+pub mod types;
 pub mod encoder;
 pub mod decoder;

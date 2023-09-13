@@ -22,6 +22,14 @@ pub enum PolyglotStatus {
     NullPointer,
 }
 
+impl PolyglotStatus {
+    pub fn check_not_null(status: *mut PolyglotStatus) {
+        if status.is_null() {
+            panic!("status pointer is null");
+        }
+    }
+}
+
 #[repr(u8)]
 #[derive(Debug)]
 pub enum PolyglotKind {
@@ -45,7 +53,7 @@ pub enum PolyglotKind {
 }
 
 impl PolyglotKind {
-    pub fn into_polyglot(self) -> polyglot_rs::Kind {
+    pub fn into(self) -> polyglot_rs::Kind {
         match self {
             PolyglotKind::None => polyglot_rs::Kind::None,
             PolyglotKind::Array => polyglot_rs::Kind::Array,
