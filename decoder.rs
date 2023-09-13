@@ -16,11 +16,11 @@
 
 use crate::kind::Kind;
 use byteorder::{BigEndian, ReadBytesExt};
+use duplicate::duplicate_item;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
 use std::str;
-use duplicate::duplicate_item;
 
 #[derive(Debug, PartialEq)]
 pub enum DecodingError {
