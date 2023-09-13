@@ -25,3 +25,5 @@ coverage
 node_modules
 
 dist/
+
+*.h-e
