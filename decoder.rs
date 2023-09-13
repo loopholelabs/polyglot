@@ -20,6 +20,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
 use std::str;
+use duplicate::duplicate_item;
 
 #[derive(Debug, PartialEq)]
 pub enum DecodingError {
@@ -73,7 +74,8 @@ pub trait Decoder {
     fn decode_f64(&mut self) -> Result<f64, DecodingError>;
 }
 
-impl Decoder for Cursor<&mut Vec<u8>> {
+#[duplicate_item(cursor; [Cursor<&mut Vec<u8>>]; [Cursor<Vec<u8>>])]
+impl Decoder for cursor {
     fn decode_none(&mut self) -> bool {
         if let Ok(kind) = self.read_u8() {
             if kind == Kind::None as u8 {

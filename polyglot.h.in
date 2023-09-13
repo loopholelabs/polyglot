@@ -24,7 +24,6 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stdlib.h>
 
 #define POLYGLOT_VERSION_MAJOR        @_VERSION_MAJOR@
 #define POLYGLOT_VERSION_MINOR        @_VERSION_MINOR@
@@ -53,12 +52,51 @@ extern "C" {
     _(POLYGLOT_STATUS_FAILURE, 1)        \
     _(POLYGLOT_STATUS_NULL_PTR,  2)      \
 
+#define KIND_VALUES(_)                 \
+    _(POLYGLOT_KIND_NONE, 0)           \
+    _(POLYGLOT_KIND_ARRAY, 1)          \
+    _(POLYGLOT_KIND_MAP, 2)            \
+    _(POLYGLOT_KIND_ANY, 3)            \
+    _(POLYGLOT_KIND_BYTES, 4)          \
+    _(POLYGLOT_KIND_STRING, 5)         \
+    _(POLYGLOT_KIND_ERROR, 6)          \
+    _(POLYGLOT_KIND_BOOL, 7)           \
+    _(POLYGLOT_KIND_U8, 8)             \
+    _(POLYGLOT_KIND_U16, 9)            \
+    _(POLYGLOT_KIND_U32, 10)           \
+    _(POLYGLOT_KIND_U64, 11)           \
+    _(POLYGLOT_KIND_I32, 12)           \
+    _(POLYGLOT_KIND_I64, 13)           \
+    _(POLYGLOT_KIND_F32, 14)           \
+    _(POLYGLOT_KIND_F64, 15)           \
+    _(POLYGLOT_KIND_UNKNOWN, 16)       \
+
 DEFINE_ENUM(polyglot_status, STATUS_VALUES)
+DEFINE_ENUM(polyglot_kind, KIND_VALUES)
 
-struct encoder;
+struct polyglot_encoder;
 
-polyglot_status_t encoder_new(struct encoder **encoder);
-void encoder_free(struct encoder *encoder);
+polyglot_status_t polyglot_new_encoder(struct polyglot_encoder **encoder);
+uint32_t polyglot_encoder_size(struct polyglot_encoder *encoder);
+polyglot_status_t polyglot_encoder_buffer(struct polyglot_encoder *encoder, uint8_t *buffer_pointer, uint32_t buffer_size);
+void polyglot_free_encoder(struct polyglot_encoder *encoder);
+
+polyglot_status_t polyglot_encode_none(struct polyglot_encoder *encoder);
+polyglot_status_t polyglot_encode_array(struct polyglot_encoder *encoder, uint32_t array_size, polyglot_kind_t array_kind);
+polyglot_status_t polyglot_encode_map(struct polyglot_encoder *encoder, uint32_t map_size, polyglot_kind_t key_kind, polyglot_kind_t value_kind);
+polyglot_status_t polyglot_encode_bytes(struct polyglot_encoder *encoder, uint8_t *buffer_pointer, uint32_t buffer_size);
+polyglot_status_t polyglot_encode_string(struct polyglot_encoder *encoder, char *string_pointer);
+
+struct polyglot_decoder;
+polyglot_status_t polyglot_new_decoder(struct polyglot_decoder **decoder, uint8_t *buffer_pointer, uint32_t buffer_size);
+void polyglot_free_decoder(struct polyglot_decoder *decoder);
+
+struct polyglot_decode_string_result {
+    polyglot_status_t status;
+    char *string;
+};
+
+struct polyglot_decode_string_result* polyglot_decode_string(struct polyglot_decoder *decoder);
 
 #ifdef __cplusplus
 } /* extern "C" */

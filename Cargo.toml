@@ -23,6 +23,7 @@ path = "lib.rs"
 
 [dependencies]
 byteorder = "1"
+duplicate = "1.0.0"
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

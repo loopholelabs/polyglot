@@ -59,6 +59,17 @@ $(CLIB_PKG_CONFIG): $(CLIB_PKG_CONFIG).in
 	sed -i '' 's|@LIBDIR@|$(LIBDIR)|' $(CLIB_PKG_CONFIG)
 	sed -i '' 's|@INCLUDE_DIR@|$(INCLUDE_DIR)|' $(CLIB_PKG_CONFIG)
 
+.PHONY: clib_test
+clib_test: $(CLIB_SO_DEV_DEBUG) $(CLIB_HEADER)
+	$(eval TMPDIR := $(shell mktemp -d))
+	cp $(CLIB_SO_DEV_DEBUG) $(TMPDIR)/$(CLIB_SO_FULL)
+	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_MAN)
+	ln -sfv $(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_DEV)
+	cp $(CLIB_HEADER) $(TMPDIR)/$(shell basename $(CLIB_HEADER))
+	gcc -g -Wall -Wextra -L$(TMPDIR) -I$(TMPDIR) -o $(TMPDIR)/polyglot_test c_bindings/tests/polyglot_test.c -lpolyglot
+	$(TMPDIR)/polyglot_test
+	rm -rf $(TMPDIR)
+
 install: clib
 	mkdir -p $(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
 	install -p -m755 $(CLIB_SO_DEV_RELEASE) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
