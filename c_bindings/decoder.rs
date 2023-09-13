@@ -74,6 +74,33 @@ pub extern "C" fn polyglot_decode_none(status: *mut PolyglotStatus, decoder: *mu
     }
 }
 
+#[no_mangle]
+pub extern "C" fn polyglot_decode_array(status: *mut PolyglotStatus, decoder: *mut Decoder, array_kind: PolyglotKind) -> c_uint {
+    PolyglotStatus::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = PolyglotStatus::NullPointer;
+        }
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_array(array_kind.into()) {
+            Ok(size ) => {
+                *status = PolyglotStatus::Pass;
+                size as c_uint
+            },
+            Err(_) => {
+                *status = PolyglotStatus::Fail;
+                0
+            }
+        }
+    }
+}
+
+
+
+
 
 #[no_mangle]
 pub extern "C" fn polyglot_decode_string(status: *mut PolyglotStatus, decoder: *mut Decoder) -> *mut c_char{

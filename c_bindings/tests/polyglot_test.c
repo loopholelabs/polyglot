@@ -50,6 +50,13 @@ int main(void) {
     assert(status == POLYGLOT_STATUS_PASS);
     assert(buffer_size == 1 + (1 + 15));
 
+    polyglot_encode_array(&status, encoder, 8, POLYGLOT_KIND_STRING);
+    assert(status == POLYGLOT_STATUS_PASS);
+
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 1 + (1 + 15) + (1 + 1 + 1 + 1));
+
     uint8_t *input_buffer_pointer = malloc(32);
     uint8_t *current_input_buffer_pointer = input_buffer_pointer;
     for (uint8_t i = 0; i < 32; i++) {
@@ -63,15 +70,7 @@ int main(void) {
 
     buffer_size = polyglot_encoder_size(&status, encoder);
     assert(status == POLYGLOT_STATUS_PASS);
-    assert(buffer_size == 1 + (1 + 15) + (1 + 1 + 1 + 32));
-
-    polyglot_kind_t polyglot_kind = POLYGLOT_KIND_STRING;
-    polyglot_encode_array(&status, encoder, 8, polyglot_kind);
-    assert(status == POLYGLOT_STATUS_PASS);
-
-    buffer_size = polyglot_encoder_size(&status, encoder);
-    assert(status == POLYGLOT_STATUS_PASS);
-    assert(buffer_size == 56);
+    assert(buffer_size == 1 + (1 + 15) + (1 + 1 + 1 + 1 ) + (1 + 1 + 1 + 32));
 
     uint8_t *buffer_pointer = malloc(buffer_size);
     polyglot_encoder_buffer(&status, encoder, buffer_pointer, buffer_size);
@@ -99,6 +98,10 @@ int main(void) {
     assert(output_string_pointer != NULL);
     assert(strcmp(input_string_pointer, output_string_pointer) == 0);
     polyglot_free_decode_string(output_string_pointer);
+
+    uint32_t output_array_size = polyglot_decode_array(&status, decoder, POLYGLOT_KIND_STRING);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(output_array_size == 8);
 
     polyglot_free_decoder(decoder);
     free(buffer_pointer);

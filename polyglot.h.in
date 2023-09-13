@@ -94,6 +94,7 @@ polyglot_decoder_t* polyglot_new_decoder(polyglot_status_t *status, uint8_t *buf
 void polyglot_free_decoder(polyglot_decoder_t *decoder);
 
 bool polyglot_decode_none(polyglot_status_t *status, polyglot_decoder_t *decoder);
+uint32_t polyglot_decode_array(polyglot_status_t *status, polyglot_decoder_t *decoder, polyglot_kind_t array_kind);
 
 char* polyglot_decode_string(polyglot_status_t *status, polyglot_decoder_t *decoder);
 void polyglot_free_decode_string(char *c_string);
