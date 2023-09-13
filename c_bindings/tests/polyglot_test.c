@@ -18,21 +18,37 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+#include <assert.h>
+#include <string.h>
+
 #include <polyglot.h>
 
 int main(void) {
     polyglot_status_t status = POLYGLOT_STATUS_PASS;
-    printf("initial status: %d\n", status);
 
     polyglot_encoder_t* encoder = polyglot_new_encoder(&status);
-    printf("polyglot_new_encoder status: %d\n", status);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(encoder != NULL);
+
+    uint32_t buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 0);
 
     polyglot_encode_none(&status, encoder);
-    printf("polyglot_encode_none status: %d\n", status);
+    assert(status == POLYGLOT_STATUS_PASS);
+
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 1);
 
     char *input_string_pointer = "Hello, World!";
     polyglot_encode_string(&status, encoder, input_string_pointer);
-    printf("polyglot_encode_string status: %d\n", status);
+    assert(status == POLYGLOT_STATUS_PASS);
+
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 1 + (1 + 15));
 
     uint8_t *input_buffer_pointer = malloc(32);
     uint8_t *current_input_buffer_pointer = input_buffer_pointer;
@@ -42,42 +58,48 @@ int main(void) {
     }
 
     polyglot_encode_bytes(&status, encoder, input_buffer_pointer, 32);
-    printf("polyglot_encode_bytes status: %d\n", status);
+    assert(status == POLYGLOT_STATUS_PASS);
     free(input_buffer_pointer);
 
-    polyglot_kind_t polyglot_kind = POLYGLOT_KIND_ARRAY;
-    polyglot_encode_array(&status, encoder, 8, polyglot_kind);
-    printf("polyglot_encode_array status: %d\n", status);
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 1 + (1 + 15) + (1 + 1 + 1 + 32));
 
-    uint32_t buffer_size = polyglot_encoder_size(&status, encoder);
-    printf("polyglot_encoder_size status: %d\n", status);
-    printf("polyglot_encoder_size buffer_size: %d\n", buffer_size);
+    polyglot_kind_t polyglot_kind = POLYGLOT_KIND_STRING;
+    polyglot_encode_array(&status, encoder, 8, polyglot_kind);
+    assert(status == POLYGLOT_STATUS_PASS);
+
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 56);
 
     uint8_t *buffer_pointer = malloc(buffer_size);
     polyglot_encoder_buffer(&status, encoder, buffer_pointer, buffer_size);
-    printf("polyglot_encoder_buffer status: %d\n", status);
+    assert(status == POLYGLOT_STATUS_PASS);
     polyglot_free_encoder(encoder);
 
-    uint8_t *current_buffer_pointer = buffer_pointer;
-    printf("polyglot_encoder_buffer contents: ");
-    for(uint32_t i = 0; i < buffer_size; i++) {
-        printf("%d ", *current_buffer_pointer);
-        current_buffer_pointer++;
-    }
-    printf("\n");
+//    uint8_t *current_buffer_pointer = buffer_pointer;
+//    printf("polyglot_encoder_buffer contents: ");
+//    for(uint32_t i = 0; i < buffer_size; i++) {
+//        printf("%d ", *current_buffer_pointer);
+//        current_buffer_pointer++;
+//    }
+//    printf("\n");
 
-    polyglot_decoder_t *polyglot_decoder = polyglot_new_decoder(&status, buffer_pointer, buffer_size);
-    printf("polyglot_new_decoder status: %d\n", status);
+    polyglot_decoder_t *decoder = polyglot_new_decoder(&status, buffer_pointer, buffer_size);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(decoder != NULL);
 
-    bool decode_none_success = polyglot_decode_none(&status, polyglot_decoder);
-    printf("polyglot_decode_none status: %d\n", status);
-    printf("polyglot_decode_none success: %s\n", decode_none_success ? "true" : "false");
+    bool decode_none_success = polyglot_decode_none(&status, decoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(decode_none_success == true);
 
-    char *output_string_pointer = polyglot_decode_string(&status, polyglot_decoder);
-    printf("polyglot_decode_string status: %d\n", status);
-    printf("polyglot_decode_string value: %s\n", output_string_pointer);
+    char *output_string_pointer = polyglot_decode_string(&status, decoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(output_string_pointer != NULL);
+    assert(strcmp(input_string_pointer, output_string_pointer) == 0);
     polyglot_free_decode_string(output_string_pointer);
 
-    polyglot_free_decoder(polyglot_decoder);
+    polyglot_free_decoder(decoder);
     free(buffer_pointer);
 }
