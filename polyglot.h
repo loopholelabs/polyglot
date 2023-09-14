@@ -121,6 +121,16 @@ void polyglot_free_decode_string(char *c_string);
 char* polyglot_decode_error(polyglot_status_t *status, polyglot_decoder_t *decoder);
 void polyglot_free_decode_error(char *c_string);
 
+bool polyglot_decode_bool(polyglot_status_t *status, polyglot_decoder_t *decoder);
+uint8_t polyglot_decode_u8(polyglot_status_t *status, polyglot_decoder_t *decoder);
+uint16_t polyglot_decode_u16(polyglot_status_t *status, polyglot_decoder_t *decoder);
+uint32_t polyglot_decode_u32(polyglot_status_t *status, polyglot_decoder_t *decoder);
+uint64_t polyglot_decode_u64(polyglot_status_t *status, polyglot_decoder_t *decoder);
+int32_t polyglot_decode_i32(polyglot_status_t *status, polyglot_decoder_t *decoder);
+int64_t polyglot_decode_i64(polyglot_status_t *status, polyglot_decoder_t *decoder);
+float polyglot_decode_f32(polyglot_status_t *status, polyglot_decoder_t *decoder);
+double polyglot_decode_f64(polyglot_status_t *status, polyglot_decoder_t *decoder);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

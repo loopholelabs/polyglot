@@ -17,7 +17,7 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 use crate::types;
-use types::{Kind, Status, StringError, Buffer};
+use types::{Kind, Status, Buffer};
 
 use std::ffi::{c_char, CString};
 use std::io::Cursor;
@@ -242,4 +242,229 @@ pub extern "C" fn polyglot_free_decode_error(c_string: *mut c_char) {
             drop(CString::from_raw(c_string))
         }
     };
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_bool(status: *mut Status, decoder: *mut Decoder) -> bool {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return false;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_bool() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                false
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_u8(status: *mut Status, decoder: *mut Decoder) -> u8 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_u8() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_u16(status: *mut Status, decoder: *mut Decoder) -> u16 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_u16() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_u32(status: *mut Status, decoder: *mut Decoder) -> u32 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_u32() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_u64(status: *mut Status, decoder: *mut Decoder) -> u64 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_u64() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_i32(status: *mut Status, decoder: *mut Decoder) -> i32 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_i32() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_i64(status: *mut Status, decoder: *mut Decoder) -> i64 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_i64() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_f32(status: *mut Status, decoder: *mut Decoder) -> f32 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0.0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_f32() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0.0
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_decode_f64(status: *mut Status, decoder: *mut Decoder) -> f64 {
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return 0.0;
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_f64() {
+            Ok(value) => {
+                *status = Status::Pass;
+                value
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                0.0
+            }
+        }
+    }
 }
