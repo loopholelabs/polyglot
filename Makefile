@@ -67,7 +67,7 @@ clib_test: $(CLIB_SO_DEV_DEBUG) $(CLIB_HEADER)
 	ln -sfv $(TMPDIR)/$(CLIB_SO_FULL) $(TMPDIR)/$(CLIB_SO_DEV)
 	cp $(CLIB_HEADER) $(TMPDIR)/$(shell basename $(CLIB_HEADER))
 	gcc -g -Wall -Wextra -L$(TMPDIR) -I$(TMPDIR) -o $(TMPDIR)/polyglot_test c_bindings/tests/polyglot_test.c -lpolyglot
-	if [ $(OS_NAME) = "darwin" ]; then (echo "Using Leaks on Darwin" && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TMPDIR) leaks --atExit -- $(TMPDIR)/polyglot_test); else (echo "Using Valgrind on Unix" && valgrind --trace-children=yes --leak-check=full --error-exitcode=1 $(TMPDIR)/polyglot_test); fi
+	if [ $(OS_NAME) = "darwin" ]; then (echo "Using Leaks on Darwin" && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TMPDIR) leaks --atExit -- $(TMPDIR)/polyglot_test); else (echo "Using Valgrind on Unix" && LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(TMPDIR) valgrind --trace-children=yes --leak-check=full --error-exitcode=1 $(TMPDIR)/polyglot_test); fi
 	rm -rf $(TMPDIR)
 
 install: clib
