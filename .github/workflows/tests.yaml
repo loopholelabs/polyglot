@@ -60,7 +60,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Update APT
-        run: sudo apt-get update -t
+        run: sudo apt-get update -y
       - name: Install Valgrind
         run: sudo apt-get install valgrind -y
       - name: Run Tests
