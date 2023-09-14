@@ -152,7 +152,7 @@ pub extern "C" fn polyglot_decode_bytes(status: *mut Status, decoder: *mut Decod
 pub extern "C" fn polyglot_free_decode_bytes(buffer: *mut Buffer) {
     if !buffer.is_null() {
         unsafe {
-            let boxed_value = unsafe { std::slice::from_raw_parts_mut((*buffer).data, (*buffer).length as usize) };
+            let boxed_value = std::slice::from_raw_parts_mut((*buffer).data, (*buffer).length as usize) ;
             let value = boxed_value.as_mut_ptr();
             drop(Box::from_raw(value));
             drop(Box::from_raw(buffer));
@@ -202,3 +202,44 @@ pub extern "C" fn polyglot_free_decode_string(c_string: *mut c_char) {
     };
 }
 
+#[no_mangle]
+pub extern "C" fn polyglot_decode_error(status: *mut Status, decoder: *mut Decoder) -> *mut c_char{
+    Status::check_not_null(status);
+
+    if decoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return std::ptr::null_mut();
+    }
+
+    unsafe {
+        match (*decoder).cursor.decode_error() {
+            Ok(value) => {
+                return match CString::new(value.to_string()) {
+                    Ok(c_string) => {
+                        *status = Status::Pass;
+                        c_string.into_raw()
+                    }
+                    Err(_) => {
+                        *status = Status::Fail;
+                        std::ptr::null_mut()
+                    }
+                };
+            },
+            Err(_) => {
+                *status = Status::Fail;
+                std::ptr::null_mut()
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_free_decode_error(c_string: *mut c_char) {
+    unsafe {
+        if !c_string.is_null() {
+            drop(CString::from_raw(c_string))
+        }
+    };
+}

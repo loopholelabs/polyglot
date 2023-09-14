@@ -118,6 +118,9 @@ void polyglot_free_decode_bytes(polyglot_buffer_t *buffer);
 char* polyglot_decode_string(polyglot_status_t *status, polyglot_decoder_t *decoder);
 void polyglot_free_decode_string(char *c_string);
 
+char* polyglot_decode_error(polyglot_status_t *status, polyglot_decoder_t *decoder);
+void polyglot_free_decode_error(char *c_string);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
