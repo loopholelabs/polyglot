@@ -14,16 +14,18 @@
     limitations under the License.
 */
 
+use std::fmt::{Debug, Display, Formatter};
+
 #[repr(u8)]
 #[derive(Debug)]
-pub enum PolyglotStatus {
+pub enum Status {
     Pass,
     Fail,
     NullPointer,
 }
 
-impl PolyglotStatus {
-    pub fn check_not_null(status: *mut PolyglotStatus) {
+impl Status {
+    pub fn check_not_null(status: *mut Status) {
         if status.is_null() {
             panic!("status pointer is null");
         }
@@ -32,7 +34,7 @@ impl PolyglotStatus {
 
 #[repr(u8)]
 #[derive(Debug)]
-pub enum PolyglotKind {
+pub enum Kind {
     None = 0x00,
     Array = 0x01,
     Map = 0x02,
@@ -52,26 +54,62 @@ pub enum PolyglotKind {
     Unknown,
 }
 
-impl PolyglotKind {
+impl Kind {
     pub fn into(self) -> polyglot_rs::Kind {
         match self {
-            PolyglotKind::None => polyglot_rs::Kind::None,
-            PolyglotKind::Array => polyglot_rs::Kind::Array,
-            PolyglotKind::Map => polyglot_rs::Kind::Map,
-            PolyglotKind::Any => polyglot_rs::Kind::Any,
-            PolyglotKind::Bytes => polyglot_rs::Kind::Bytes,
-            PolyglotKind::String => polyglot_rs::Kind::String,
-            PolyglotKind::Error => polyglot_rs::Kind::Error,
-            PolyglotKind::Bool => polyglot_rs::Kind::Bool,
-            PolyglotKind::U8 => polyglot_rs::Kind::U8,
-            PolyglotKind::U16 => polyglot_rs::Kind::U16,
-            PolyglotKind::U32 => polyglot_rs::Kind::U32,
-            PolyglotKind::U64 => polyglot_rs::Kind::U64,
-            PolyglotKind::I32 => polyglot_rs::Kind::I32,
-            PolyglotKind::I64 => polyglot_rs::Kind::I64,
-            PolyglotKind::F32 => polyglot_rs::Kind::F32,
-            PolyglotKind::F64 => polyglot_rs::Kind::F64,
-            PolyglotKind::Unknown => polyglot_rs::Kind::Unknown,
+            Kind::None => polyglot_rs::Kind::None,
+            Kind::Array => polyglot_rs::Kind::Array,
+            Kind::Map => polyglot_rs::Kind::Map,
+            Kind::Any => polyglot_rs::Kind::Any,
+            Kind::Bytes => polyglot_rs::Kind::Bytes,
+            Kind::String => polyglot_rs::Kind::String,
+            Kind::Error => polyglot_rs::Kind::Error,
+            Kind::Bool => polyglot_rs::Kind::Bool,
+            Kind::U8 => polyglot_rs::Kind::U8,
+            Kind::U16 => polyglot_rs::Kind::U16,
+            Kind::U32 => polyglot_rs::Kind::U32,
+            Kind::U64 => polyglot_rs::Kind::U64,
+            Kind::I32 => polyglot_rs::Kind::I32,
+            Kind::I64 => polyglot_rs::Kind::I64,
+            Kind::F32 => polyglot_rs::Kind::F32,
+            Kind::F64 => polyglot_rs::Kind::F64,
+            Kind::Unknown => polyglot_rs::Kind::Unknown,
         }
+    }
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct Buffer {
+    pub(crate) data: *mut u8,
+    pub(crate) length: u32,
+}
+
+impl Buffer {
+    pub fn new_raw(data: *mut u8, length: u32) -> *mut Self {
+        Box::into_raw(Box::new(Buffer {
+            data,
+            length,
+        }))
+    }
+}
+
+pub(crate) struct StringError(pub(crate) String);
+
+impl Debug for StringError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&self.0, f)
+    }
+}
+
+impl Display for StringError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl std::error::Error for StringError {
+    fn description(&self) -> &str {
+        &self.0
     }
 }

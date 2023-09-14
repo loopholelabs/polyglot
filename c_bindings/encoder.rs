@@ -17,10 +17,9 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 use crate::types;
-use types::PolyglotKind;
-use types::PolyglotStatus;
+use types::{Kind, Status, StringError};
 
-use std::ffi::{c_char, c_uint, CStr};
+use std::ffi::{c_char, CStr};
 use std::io::{Cursor, Write};
 use polyglot_rs::{Encoder as PolyglotEncoder};
 
@@ -31,11 +30,11 @@ pub struct Encoder {
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_new_encoder(status: *mut PolyglotStatus) -> *mut Encoder {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_new_encoder(status: *mut Status) -> *mut Encoder {
+    Status::check_not_null(status);
 
     unsafe {
-        *status = PolyglotStatus::Pass;
+        *status = Status::Pass;
     }
 
     Box::into_raw(Box::new(Encoder {
@@ -44,45 +43,45 @@ pub extern "C" fn polyglot_new_encoder(status: *mut PolyglotStatus) -> *mut Enco
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encoder_size(status: *mut PolyglotStatus, encoder: *mut Encoder) -> c_uint {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encoder_size(status: *mut Status, encoder: *mut Encoder) -> u32 {
+    Status::check_not_null(status);
 
     if encoder.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return 0;
     }
 
     unsafe {
-        (*encoder).cursor.get_ref().len() as c_uint
+        (*encoder).cursor.get_ref().len() as u32
     }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encoder_buffer(status: *mut PolyglotStatus, encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encoder_buffer(status: *mut Status, encoder: *mut Encoder, buffer_pointer: *mut u8, buffer_size: u32) {
+    Status::check_not_null(status);
 
     if encoder.is_null() || buffer_pointer.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return;
     }
 
     unsafe {
-        if buffer_size < (*encoder).cursor.get_ref().len() as c_uint {
-            *status = PolyglotStatus::Fail;
+        if buffer_size < (*encoder).cursor.get_ref().len() as u32 {
+            *status = Status::Fail;
             return;
         }
 
-        let mut buffer = std::slice::from_raw_parts_mut(buffer_pointer as *mut u8, buffer_size as usize);
+        let mut buffer = std::slice::from_raw_parts_mut(buffer_pointer, buffer_size as usize);
         match buffer.write((*encoder).cursor.get_ref().as_slice()) {
             Ok(_) => {
-                *status = PolyglotStatus::Pass;
+                *status = Status::Pass;
             },
             Err(_) => {
-                *status = PolyglotStatus::Fail;
+                *status = Status::Fail;
             },
         }
     }
@@ -98,12 +97,12 @@ pub extern "C" fn polyglot_free_encoder(encoder: *mut Encoder) {
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encode_none(status: *mut PolyglotStatus, encoder: *mut Encoder) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encode_none(status: *mut Status, encoder: *mut Encoder) {
+    Status::check_not_null(status);
 
     if encoder.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer
+            *status = Status::NullPointer
         }
         return;
     }
@@ -111,22 +110,22 @@ pub extern "C" fn polyglot_encode_none(status: *mut PolyglotStatus, encoder: *mu
     unsafe {
         match (*encoder).cursor.encode_none() {
             Ok(_) => {
-                *status = PolyglotStatus::Pass
+                *status = Status::Pass
             },
             Err(_) => {
-                *status = PolyglotStatus::Fail
+                *status = Status::Fail
             },
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encode_array(status: *mut PolyglotStatus, encoder: *mut Encoder, array_size: c_uint, array_kind: PolyglotKind) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encode_array(status: *mut Status, encoder: *mut Encoder, array_size: u32, array_kind: Kind) {
+    Status::check_not_null(status);
 
     if encoder.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return;
     }
@@ -134,22 +133,22 @@ pub extern "C" fn polyglot_encode_array(status: *mut PolyglotStatus, encoder: *m
     unsafe {
         match (*encoder).cursor.encode_array(array_size as usize, array_kind.into()) {
             Ok(_) => {
-                *status = PolyglotStatus::Pass
+                *status = Status::Pass
             },
             Err(_) => {
-                *status = PolyglotStatus::Fail
+                *status = Status::Fail
             },
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encode_map(status: *mut PolyglotStatus, encoder: *mut Encoder, map_size: c_uint, key_kind: PolyglotKind, value_kind: PolyglotKind) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encode_map(status: *mut Status, encoder: *mut Encoder, map_size: u32, key_kind: Kind, value_kind: Kind) {
+    Status::check_not_null(status);
 
     if encoder.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return;
     }
@@ -157,46 +156,46 @@ pub extern "C" fn polyglot_encode_map(status: *mut PolyglotStatus, encoder: *mut
     unsafe {
         match (*encoder).cursor.encode_map(map_size as usize, key_kind.into(), value_kind.into()) {
             Ok(_) => {
-                *status = PolyglotStatus::Pass
+                *status = Status::Pass
             },
             Err(_) =>  {
-                *status = PolyglotStatus::Fail;
+                *status = Status::Fail;
             },
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encode_bytes(status: *mut PolyglotStatus, encoder: *mut Encoder, buffer_pointer: *mut c_char, buffer_size: c_uint) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encode_bytes(status: *mut Status, encoder: *mut Encoder, buffer_pointer: *mut u8, buffer_size: u32) {
+    Status::check_not_null(status);
 
     if encoder.is_null() || buffer_pointer.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return;
     }
 
     unsafe {
-        let buffer = std::slice::from_raw_parts_mut(buffer_pointer as *mut u8, buffer_size as usize);
+        let buffer = std::slice::from_raw_parts_mut(buffer_pointer, buffer_size as usize);
         match (*encoder).cursor.encode_bytes(buffer) {
             Ok(_) => {
-                *status = PolyglotStatus::Pass
+                *status = Status::Pass
             },
             Err(_) =>  {
-                *status = PolyglotStatus::Fail;
+                *status = Status::Fail;
             },
         }
     }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_encode_string(status: *mut PolyglotStatus, encoder: *mut Encoder, string_pointer: *const c_char) {
-    PolyglotStatus::check_not_null(status);
+pub extern "C" fn polyglot_encode_string(status: *mut Status, encoder: *mut Encoder, string_pointer: *const c_char) {
+    Status::check_not_null(status);
 
     if encoder.is_null() {
         unsafe {
-            *status = PolyglotStatus::NullPointer;
+            *status = Status::NullPointer;
         }
         return;
     }
@@ -205,55 +204,254 @@ pub extern "C" fn polyglot_encode_string(status: *mut PolyglotStatus, encoder: *
         let c_str = match CStr::from_ptr(string_pointer).to_str() {
             Ok(c_str) => c_str,
             Err(_) => {
-                *status = PolyglotStatus::Fail;
+                *status = Status::Fail;
                 return;
             },
         };
         match (*encoder).cursor.encode_str(c_str) {
             Ok(_) => {
-                *status = PolyglotStatus::Pass
+                *status = Status::Pass
             },
             Err(_) =>  {
-                *status = PolyglotStatus::Fail;
+                *status = Status::Fail;
             },
         }
     }
 }
 
-/*
-pub trait Encoder {
-    fn encode_str(self, val: &str) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_error(self, val: Box<dyn Error>) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_bool(self, val: bool) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_u8(self, val: u8) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_u16(self, val: u16) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_u32(self, val: u32) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_u64(self, val: u64) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_i32(self, val: i32) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_i64(self, val: i64) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_f32(self, val: f32) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
-    fn encode_f64(self, val: f64) -> Result<Self, EncodingError>
-    where
-        Self: Sized;
+#[no_mangle]
+pub extern "C" fn polyglot_encode_error(status: *mut Status, encoder: *mut Encoder, string_pointer: *mut c_char) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        let error_string = match CStr::from_ptr(string_pointer).to_str() {
+            Ok(c_str) => Box::new(StringError(c_str.to_string())),
+            Err(_) => {
+                *status = Status::Fail;
+                return;
+            },
+        };
+        match (*encoder).cursor.encode_error(error_string) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
 }
- */
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_bool(status: *mut Status, encoder: *mut Encoder, val: bool) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_bool(val) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_u8(status: *mut Status, encoder: *mut Encoder, value: u8) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_u8(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_u16(status: *mut Status, encoder: *mut Encoder, value: u16) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_u16(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_u32(status: *mut Status, encoder: *mut Encoder, value: u32) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_u32(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_u64(status: *mut Status, encoder: *mut Encoder, value: u64) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_u64(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_i32(status: *mut Status, encoder: *mut Encoder, value: i32) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_i32(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_i64(status: *mut Status, encoder: *mut Encoder, value: i64) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_i64(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_f32(status: *mut Status, encoder: *mut Encoder, value: f32) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_f32(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn polyglot_encode_f64(status: *mut Status, encoder: *mut Encoder, value: f64) {
+    Status::check_not_null(status);
+
+    if encoder.is_null() {
+        unsafe {
+            *status = Status::NullPointer;
+        }
+        return;
+    }
+
+    unsafe {
+        match (*encoder).cursor.encode_f64(value) {
+            Ok(_) => {
+                *status = Status::Pass
+            },
+            Err(_) =>  {
+                *status = Status::Fail;
+            },
+        }
+    }
+}

@@ -75,6 +75,11 @@ extern "C" {
 DEFINE_ENUM(polyglot_status, STATUS_VALUES)
 DEFINE_ENUM(polyglot_kind, KIND_VALUES)
 
+typedef struct polyglot_buffer {
+    uint8_t *data;
+    uint32_t length;
+} polyglot_buffer_t;
+
 typedef struct polyglot_encoder polyglot_encoder_t;
 
 polyglot_encoder_t* polyglot_new_encoder(polyglot_status_t *status);
@@ -87,6 +92,16 @@ void polyglot_encode_array(polyglot_status_t *status, polyglot_encoder_t *encode
 void polyglot_encode_map(polyglot_status_t *status, polyglot_encoder_t *encoder, uint32_t map_size, polyglot_kind_t key_kind, polyglot_kind_t value_kind);
 void polyglot_encode_bytes(polyglot_status_t *status, polyglot_encoder_t *encoder, uint8_t *buffer_pointer, uint32_t buffer_size);
 void polyglot_encode_string(polyglot_status_t *status, polyglot_encoder_t *encoder, char *string_pointer);
+void polyglot_encode_error(polyglot_status_t *status, polyglot_encoder_t *encoder, char *string_pointer);
+void polyglot_encode_bool(polyglot_status_t *status, polyglot_encoder_t *encoder, bool value);
+void polyglot_encode_u8(polyglot_status_t *status, polyglot_encoder_t *encoder, uint8_t value);
+void polyglot_encode_u16(polyglot_status_t *status, polyglot_encoder_t *encoder, uint16_t value);
+void polyglot_encode_u32(polyglot_status_t *status, polyglot_encoder_t *encoder, uint32_t value);
+void polyglot_encode_u64(polyglot_status_t *status, polyglot_encoder_t *encoder, uint64_t value);
+void polyglot_encode_i32(polyglot_status_t *status, polyglot_encoder_t *encoder, int32_t value);
+void polyglot_encode_i64(polyglot_status_t *status, polyglot_encoder_t *encoder, int64_t value);
+void polyglot_encode_f32(polyglot_status_t *status, polyglot_encoder_t *encoder, float value);
+void polyglot_encode_f64(polyglot_status_t *status, polyglot_encoder_t *encoder, double value);
 
 typedef struct polyglot_decoder polyglot_decoder_t;
 
@@ -95,6 +110,10 @@ void polyglot_free_decoder(polyglot_decoder_t *decoder);
 
 bool polyglot_decode_none(polyglot_status_t *status, polyglot_decoder_t *decoder);
 uint32_t polyglot_decode_array(polyglot_status_t *status, polyglot_decoder_t *decoder, polyglot_kind_t array_kind);
+uint32_t polyglot_decode_map(polyglot_status_t *status, polyglot_decoder_t *decoder, polyglot_kind_t key_kind, polyglot_kind_t value_kind);
+
+polyglot_buffer_t *polyglot_decode_bytes(polyglot_status_t *status, polyglot_decoder_t *decoder);
+void polyglot_free_decode_bytes(polyglot_buffer_t *buffer);
 
 char* polyglot_decode_string(polyglot_status_t *status, polyglot_decoder_t *decoder);
 void polyglot_free_decode_string(char *c_string);

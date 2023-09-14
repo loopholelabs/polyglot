@@ -66,7 +66,6 @@ int main(void) {
 
     polyglot_encode_bytes(&status, encoder, input_buffer_pointer, 32);
     assert(status == POLYGLOT_STATUS_PASS);
-    free(input_buffer_pointer);
 
     buffer_size = polyglot_encoder_size(&status, encoder);
     assert(status == POLYGLOT_STATUS_PASS);
@@ -103,6 +102,16 @@ int main(void) {
     assert(status == POLYGLOT_STATUS_PASS);
     assert(output_array_size == 8);
 
+    polyglot_buffer_t *output_buffer_pointer = polyglot_decode_bytes(&status, decoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(output_buffer_pointer != NULL);
+    assert(output_buffer_pointer->length == 32);
+    assert(memcmp(input_buffer_pointer, output_buffer_pointer->data, 32) == 0);
+    free(input_buffer_pointer);
+    polyglot_free_decode_bytes(output_buffer_pointer);
+
     polyglot_free_decoder(decoder);
     free(buffer_pointer);
+
+    printf("polyglot_test.c: PASS\n");
 }
