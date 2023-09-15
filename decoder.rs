@@ -73,7 +73,10 @@ pub trait Decoder {
     fn decode_f64(&mut self) -> Result<f64, DecodingError>;
 }
 
-impl<'a, T> Decoder for Cursor<T> where T: AsRef<[u8]> {
+impl<'a, T> Decoder for Cursor<T>
+where
+    T: AsRef<[u8]>,
+{
     fn decode_none(&mut self) -> bool {
         if let Ok(kind) = self.read_u8() {
             if kind == Kind::None as u8 {
