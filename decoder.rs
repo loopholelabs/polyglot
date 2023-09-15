@@ -73,7 +73,7 @@ pub trait Decoder {
     fn decode_f64(&mut self) -> Result<f64, DecodingError>;
 }
 
-impl<'a, T> Decoder for Cursor<T>
+impl<T> Decoder for Cursor<T>
 where
     T: AsRef<[u8]>,
 {
