@@ -16,7 +16,6 @@
 
 use crate::kind::Kind;
 use byteorder::{BigEndian, ReadBytesExt};
-use duplicate::duplicate_item;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::io::{Cursor, Read};
@@ -74,8 +73,7 @@ pub trait Decoder {
     fn decode_f64(&mut self) -> Result<f64, DecodingError>;
 }
 
-#[duplicate_item(cursor; [Cursor<&mut Vec<u8>>]; [Cursor<Vec<u8>>])]
-impl Decoder for cursor {
+impl<'a, T> Decoder for Cursor<T> where T: AsRef<[u8]> {
     fn decode_none(&mut self) -> bool {
         if let Ok(kind) = self.read_u8() {
             if kind == Kind::None as u8 {
