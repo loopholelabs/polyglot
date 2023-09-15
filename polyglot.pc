@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=/usr/local/lib64
+includedir=/usr/local/include/
+
+Name: polyglot
+Version: 1.1.3
+Description: Polyglot C/C++ Bindings
+Requires:
+Libs: -L${libdir} -lpolyglot
+Cflags: -I${includedir}
