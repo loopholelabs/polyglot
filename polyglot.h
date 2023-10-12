@@ -28,7 +28,7 @@ extern "C" {
 
 #define POLYGLOT_VERSION_MAJOR        1
 #define POLYGLOT_VERSION_MINOR        1
-#define POLYGLOT_VERSION_MICRO        3
+#define POLYGLOT_VERSION_MICRO        4
 
 #define POLYGLOT_VERSION                \
     ((POLYGLOT_VERSION_MAJOR * 10000) + \
