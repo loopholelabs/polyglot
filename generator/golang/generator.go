@@ -117,7 +117,7 @@ func (g *Generator) ExecuteTemplate(
 	header bool,
 ) error {
 	return g.templ.ExecuteTemplate(genFile, "base.templ", map[string]interface{}{
-		"pluginVersion":   version.Version,
+		"pluginVersion":   version.Version(),
 		"sourcePath":      protoFile.Desc.Path(),
 		"package":         packageName,
 		"requiredImports": RequiredImports,

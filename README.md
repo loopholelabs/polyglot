@@ -1,12 +1,12 @@
 <br/>
 <div align="center">
   <a href="https://github.com/loopholelabs/polyglot">
-    <img src="images/logo.png" alt="Logo" width="120" height="130">
+    <img src="images/logo.png" alt="Logo" height="130">
   </a>
   <h3 align="center">Polyglot</h3>
-  <p align="center">
+  <h4 align="center">
     A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages.
-  </p>
+  </h4>
 
   [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
   [![Discord](https://dcbadge.vercel.app/api/server/JYmFhtdPeu?style=flat)](https://loopholelabs.io/discord)

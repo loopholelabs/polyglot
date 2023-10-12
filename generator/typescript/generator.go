@@ -152,7 +152,7 @@ func (g *Generator) ExecuteTemplate(
 
 	var headBuf bytes.Buffer
 	if err := g.templ.ExecuteTemplate(&headBuf, "head.templ", map[string]interface{}{
-		"pluginVersion": version.Version,
+		"pluginVersion": version.Version(),
 		"sourcePath":    protoFile.Desc.Path(),
 		"package":       packageName,
 		"header":        header,

@@ -63,7 +63,7 @@ mod tests {
         let test_data = get_test_data();
 
         for mut td in test_data {
-            let mut decoder = Cursor::new(td.encoded_value.as_mut());
+            let mut decoder: Cursor<&mut Vec<u8>> = Cursor::new(td.encoded_value.as_mut());
 
             match td.kind {
                 Kind::None => {

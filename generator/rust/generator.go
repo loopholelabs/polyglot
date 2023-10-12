@@ -141,7 +141,7 @@ func (g *Generator) ExecuteTemplate(
 	deps := DependencyAnalysis(protoFile)
 
 	err := g.templ.ExecuteTemplate(&buf, "base.templ", map[string]interface{}{
-		"pluginVersion": version.Version,
+		"pluginVersion": version.Version(),
 		"sourcePath":    protoFile.Desc.Path(),
 		"package":       packageName,
 		"enums":         protoFile.Desc.Enums(),
