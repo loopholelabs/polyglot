@@ -41,25 +41,25 @@ var (
 	Float64RawKind = byte(15)
 )
 
-type Kind []byte
+type Kind byte
 
 var (
-	NilKind     = Kind([]byte{NilRawKind})
-	SliceKind   = Kind([]byte{SliceRawKind})
-	MapKind     = Kind([]byte{MapRawKind})
-	AnyKind     = Kind([]byte{AnyRawKind})
-	BytesKind   = Kind([]byte{BytesRawKind})
-	StringKind  = Kind([]byte{StringRawKind})
-	ErrorKind   = Kind([]byte{ErrorRawKind})
-	BoolKind    = Kind([]byte{BoolRawKind})
-	Uint8Kind   = Kind([]byte{Uint8RawKind})
-	Uint16Kind  = Kind([]byte{Uint16RawKind})
-	Uint32Kind  = Kind([]byte{Uint32RawKind})
-	Uint64Kind  = Kind([]byte{Uint64RawKind})
-	Int32Kind   = Kind([]byte{Int32RawKind})
-	Int64Kind   = Kind([]byte{Int64RawKind})
-	Float32Kind = Kind([]byte{Float32RawKind})
-	Float64Kind = Kind([]byte{Float64RawKind})
+	NilKind     = Kind(NilRawKind)
+	SliceKind   = Kind(SliceRawKind)
+	MapKind     = Kind(MapRawKind)
+	AnyKind     = Kind(AnyRawKind)
+	BytesKind   = Kind(BytesRawKind)
+	StringKind  = Kind(StringRawKind)
+	ErrorKind   = Kind(ErrorRawKind)
+	BoolKind    = Kind(BoolRawKind)
+	Uint8Kind   = Kind(Uint8RawKind)
+	Uint16Kind  = Kind(Uint16RawKind)
+	Uint32Kind  = Kind(Uint32RawKind)
+	Uint64Kind  = Kind(Uint64RawKind)
+	Int32Kind   = Kind(Int32RawKind)
+	Int64Kind   = Kind(Int64RawKind)
+	Float32Kind = Kind(Float32RawKind)
+	Float64Kind = Kind(Float64RawKind)
 )
 
 type Error string
@@ -78,24 +78,28 @@ var (
 )
 
 func encodeNil(b *Buffer) {
-	b.Write(NilKind)
+	b.Grow(1)
+	b.WriteRawByte(NilRawKind)
 }
 
-func encodeMap(b *Buffer, size uint32, keyKind, valueKind Kind) {
-	b.Write(MapKind)
-	b.Write(keyKind)
-	b.Write(valueKind)
+func encodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
+	b.Grow(3)
+	b.WriteRawByte(MapRawKind)
+	b.WriteRawByte(byte(keyKind))
+	b.WriteRawByte(byte(valueKind))
 	encodeUint32(b, size)
 }
 
 func encodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.Write(SliceKind)
-	b.Write(kind)
+	b.Grow(2)
+	b.WriteRawByte(SliceRawKind)
+	b.WriteRawByte(byte(kind))
 	encodeUint32(b, size)
 }
 
 func encodeBytes(b *Buffer, value []byte) {
-	b.Write(BytesKind)
+	b.Grow(1)
+	b.WriteRawByte(BytesRawKind)
 	encodeUint32(b, uint32(len(value)))
 	b.Write(value)
 }
@@ -109,13 +113,15 @@ func encodeString(b *Buffer, value string) {
 	bh.Data = sh.Data
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
-	b.Write(StringKind)
+	b.Grow(1)
+	b.WriteRawByte(StringRawKind)
 	encodeUint32(b, uint32(len(nb)))
 	b.Write(nb)
 }
 
 func encodeError(b *Buffer, err error) {
-	b.Write(ErrorKind)
+	b.Grow(1)
+	b.WriteRawByte(ErrorRawKind)
 	encodeString(b, err.Error())
 }
 
