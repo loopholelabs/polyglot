@@ -22,25 +22,44 @@ import (
 	"unsafe"
 )
 
+var (
+	NilRawKind     = byte(0)
+	SliceRawKind   = byte(1)
+	MapRawKind     = byte(2)
+	AnyRawKind     = byte(3)
+	BytesRawKind   = byte(4)
+	StringRawKind  = byte(5)
+	ErrorRawKind   = byte(6)
+	BoolRawKind    = byte(7)
+	Uint8RawKind   = byte(8)
+	Uint16RawKind  = byte(9)
+	Uint32RawKind  = byte(10)
+	Uint64RawKind  = byte(11)
+	Int32RawKind   = byte(12)
+	Int64RawKind   = byte(13)
+	Float32RawKind = byte(14)
+	Float64RawKind = byte(15)
+)
+
 type Kind []byte
 
 var (
-	NilKind     = Kind([]byte{0})
-	SliceKind   = Kind([]byte{1})
-	MapKind     = Kind([]byte{2})
-	AnyKind     = Kind([]byte{3})
-	BytesKind   = Kind([]byte{4})
-	StringKind  = Kind([]byte{5})
-	ErrorKind   = Kind([]byte{6})
-	BoolKind    = Kind([]byte{7})
-	Uint8Kind   = Kind([]byte{8})
-	Uint16Kind  = Kind([]byte{9})
-	Uint32Kind  = Kind([]byte{10})
-	Uint64Kind  = Kind([]byte{11})
-	Int32Kind   = Kind([]byte{12})
-	Int64Kind   = Kind([]byte{13})
-	Float32Kind = Kind([]byte{14})
-	Float64Kind = Kind([]byte{15})
+	NilKind     = Kind([]byte{NilRawKind})
+	SliceKind   = Kind([]byte{SliceRawKind})
+	MapKind     = Kind([]byte{MapRawKind})
+	AnyKind     = Kind([]byte{AnyRawKind})
+	BytesKind   = Kind([]byte{BytesRawKind})
+	StringKind  = Kind([]byte{StringRawKind})
+	ErrorKind   = Kind([]byte{ErrorRawKind})
+	BoolKind    = Kind([]byte{BoolRawKind})
+	Uint8Kind   = Kind([]byte{Uint8RawKind})
+	Uint16Kind  = Kind([]byte{Uint16RawKind})
+	Uint32Kind  = Kind([]byte{Uint32RawKind})
+	Uint64Kind  = Kind([]byte{Uint64RawKind})
+	Int32Kind   = Kind([]byte{Int32RawKind})
+	Int64Kind   = Kind([]byte{Int64RawKind})
+	Float32Kind = Kind([]byte{Float32RawKind})
+	Float64Kind = Kind([]byte{Float64RawKind})
 )
 
 type Error string
@@ -101,53 +120,59 @@ func encodeError(b *Buffer, err error) {
 }
 
 func encodeBool(b *Buffer, value bool) {
-	b.Write(BoolKind)
+	b.Grow(2)
+	b.WriteRawByte(BoolRawKind)
 	if value {
-		*b = append(*b, trueBool)
+		b.WriteRawByte(trueBool)
 	} else {
-		*b = append(*b, falseBool)
+		b.WriteRawByte(falseBool)
 	}
 }
 
 func encodeUint8(b *Buffer, value uint8) {
-	b.Write(Uint8Kind)
-	*b = append(*b, value)
+	b.Grow(2)
+	b.WriteRawByte(Uint8RawKind)
+	b.WriteRawByte(value)
 }
 
 // Variable integer encoding with the same format as binary.varint
 // (https://developers.google.com/protocol-buffers/docs/encoding#varints)
 func encodeUint16(b *Buffer, value uint16) {
-	b.Write(Uint16Kind)
+	b.Grow(VarIntLen16)
+	b.WriteRawByte(Uint16RawKind)
 	for value >= continuation {
 		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
-		*b = append(*b, byte(value)|continuation)
+		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
-	*b = append(*b, byte(value))
+	b.WriteRawByte(byte(value))
 }
 
 func encodeUint32(b *Buffer, value uint32) {
-	b.Write(Uint32Kind)
+	b.Grow(VarIntLen32)
+	b.WriteRawByte(Uint32RawKind)
 	for value >= continuation {
 		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
-		*b = append(*b, byte(value)|continuation)
+		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
-	*b = append(*b, byte(value))
+	b.WriteRawByte(byte(value))
 }
 
 func encodeUint64(b *Buffer, value uint64) {
-	b.Write(Uint64Kind)
+	b.Grow(VarIntLen64)
+	b.WriteRawByte(Uint64RawKind)
 	for value >= continuation {
 		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
-		*b = append(*b, byte(value)|continuation)
+		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
-	*b = append(*b, byte(value))
+	b.WriteRawByte(byte(value))
 }
 
 func encodeInt32(b *Buffer, value int32) {
-	b.Write(Int32Kind)
+	b.Grow(VarIntLen32)
+	b.WriteRawByte(Int32RawKind)
 	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint32(value) << 1
 	if value < 0 {
@@ -155,14 +180,15 @@ func encodeInt32(b *Buffer, value int32) {
 	}
 	for castValue >= continuation {
 		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
-		*b = append(*b, byte(castValue)|continuation)
+		b.WriteRawByte(byte(castValue) | continuation)
 		castValue >>= 7
 	}
-	*b = append(*b, byte(castValue))
+	b.WriteRawByte(byte(castValue))
 }
 
 func encodeInt64(b *Buffer, value int64) {
-	b.Write(Int64Kind)
+	b.Grow(VarIntLen64)
+	b.WriteRawByte(Int64RawKind)
 	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint64(value) << 1
 	if value < 0 {
@@ -170,20 +196,32 @@ func encodeInt64(b *Buffer, value int64) {
 	}
 	for castValue >= continuation {
 		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
-		*b = append(*b, byte(castValue)|continuation)
+		b.WriteRawByte(byte(castValue) | continuation)
 		castValue >>= 7
 	}
-	*b = append(*b, byte(castValue))
+	b.WriteRawByte(byte(castValue))
 }
 
 func encodeFloat32(b *Buffer, value float32) {
-	b.Write(Float32Kind)
+	b.Grow(5)
+	b.WriteRawByte(Float32RawKind)
 	castValue := math.Float32bits(value)
-	*b = append(*b, byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
+	b.WriteRawByte(byte(castValue >> 24))
+	b.WriteRawByte(byte(castValue >> 16))
+	b.WriteRawByte(byte(castValue >> 8))
+	b.WriteRawByte(byte(castValue))
 }
 
 func encodeFloat64(b *Buffer, value float64) {
-	b.Write(Float64Kind)
+	b.Grow(9)
+	b.WriteRawByte(Float64RawKind)
 	castValue := math.Float64bits(value)
-	*b = append(*b, byte(castValue>>56), byte(castValue>>48), byte(castValue>>40), byte(castValue>>32), byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
+	b.WriteRawByte(byte(castValue >> 56))
+	b.WriteRawByte(byte(castValue >> 48))
+	b.WriteRawByte(byte(castValue >> 40))
+	b.WriteRawByte(byte(castValue >> 32))
+	b.WriteRawByte(byte(castValue >> 24))
+	b.WriteRawByte(byte(castValue >> 16))
+	b.WriteRawByte(byte(castValue >> 8))
+	b.WriteRawByte(byte(castValue))
 }

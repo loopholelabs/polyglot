@@ -27,19 +27,19 @@ import (
 func TestWrite(t *testing.T) {
 	t.Parallel()
 
-	p := *NewBuffer()
+	p := NewBuffer()
 
 	b := make([]byte, 32)
 	_, err := rand.Read(b)
 	assert.NoError(t, err)
 
 	p.Write(b)
-	assert.EqualValues(t, b, p)
+	assert.EqualValues(t, b, p.Bytes())
 
 	p.Reset()
-	assert.NotEqual(t, b, p)
-	assert.Equal(t, 0, len(p))
-	assert.Equal(t, 512, cap(p))
+	assert.NotEqual(t, b, p.Bytes())
+	assert.Equal(t, 0, p.Len())
+	assert.Equal(t, 512, p.Cap())
 
 	b = make([]byte, 1024)
 	_, err = rand.Read(b)
@@ -47,10 +47,15 @@ func TestWrite(t *testing.T) {
 
 	p.Write(b)
 
-	assert.EqualValues(t, b, p)
-	assert.Equal(t, 1024, len(p))
-	assert.GreaterOrEqual(t, cap(p), 1024)
+	assert.EqualValues(t, b, p.Bytes())
+	assert.Equal(t, 1024, p.Len())
+	assert.GreaterOrEqual(t, p.Cap(), 1024)
 
+	p.Write(b)
+
+	assert.EqualValues(t, append(b, b...), p.Bytes())
+	assert.Equal(t, 2048, p.Len())
+	assert.GreaterOrEqual(t, p.Cap(), 2048)
 }
 
 type embedStruct struct {
