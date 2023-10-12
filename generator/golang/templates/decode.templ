@@ -3,14 +3,12 @@ func (x *{{ CamelCase .FullName }}) Decode (b []byte) error {
     if x == nil {
         return NilDecode
     }
-    d := polyglot.GetDecoder(b)
-    defer d.Return()
-    return x.decode(d)
+    return x.decode(polyglot.Decoder(b))
 }
 {{end}}
 
 {{define "internalDecode"}}
-func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
+func (x *{{CamelCase .FullName}}) decode(d *polyglot.BufferDecoder) error {
     if d.Nil() {
         return nil
     }
@@ -24,7 +22,7 @@ var err error
 {{ range $field := $decoding.Other -}}
     {{ $decoder := GetLUTDecoder $field.Kind -}}
     {{ if eq $field.Kind 12 -}} {{/* protoreflect.BytesKind */ -}}
-    x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}(nil)
+    x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}(x.{{ CamelCaseName $field.Name }})
     {{ else if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
     var {{ CamelCaseName $field.Name }}Temp uint32
     {{ CamelCaseName $field.Name }}Temp, err = d{{ $decoder }}()
