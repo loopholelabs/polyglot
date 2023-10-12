@@ -33,9 +33,9 @@ func (buf *Buffer) Reset() {
 func (buf *Buffer) Grow(n int) {
 	if cap(buf.b)-buf.offset < n {
 		if cap(buf.b) < n {
-			buf.b = append(buf.b[:buf.offset], make([]byte, n)...)
+			buf.b = append(buf.b[:buf.offset], make([]byte, n+cap(buf.b)-buf.offset)...)
 		} else {
-			buf.b = append(buf.b[:buf.offset], make([]byte, cap(buf.b))...)
+			buf.b = append(buf.b[:buf.offset], make([]byte, cap(buf.b)*2-buf.offset)...)
 		}
 	}
 }
