@@ -449,7 +449,6 @@ func TestDecodeUint64(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
-
 }
 
 func TestDecodeInt32(t *testing.T) {
@@ -572,7 +571,6 @@ func TestDecodeFloat32(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
-
 }
 
 func TestDecodeFloat64(t *testing.T) {
@@ -607,5 +605,4 @@ func TestDecodeFloat64(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
-
 }

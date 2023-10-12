@@ -292,7 +292,7 @@ func TestCompleteChain(t *testing.T) {
 	val := new(testStruct)
 	var err error
 
-	d := GetDecoder(p.Bytes())
+	d := Decoder(p.Bytes())
 
 	val.err, err = d.Error()
 	assert.NoError(t, err)
@@ -375,13 +375,12 @@ func TestCompleteChain(t *testing.T) {
 	}
 	assert.Equal(t, test.m, val.m)
 
-	assert.Equal(t, 0, len(d.b))
-	d.Return()
+	assert.Equal(t, 0, len(*d))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Error(test.err).String(test.test).Bytes(test.b).Uint8(test.num1).Uint16(test.num2).Uint32(test.num3).Uint64(test.num4).Bool(test.truth).Nil()
-		d = GetDecoder(p.Bytes())
+		d = Decoder(p.Bytes())
 		val.err, err = d.Error()
 		val.test, err = d.String()
 		val.b, err = d.Bytes(val.b)
@@ -391,10 +390,9 @@ func TestCompleteChain(t *testing.T) {
 		val.num4, err = d.Uint64()
 		val.truth, err = d.Bool()
 		isNil = d.Nil()
-		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(3), n)
+	assert.Equal(t, float64(4), n)
 }
 
 func TestNilSlice(t *testing.T) {
@@ -402,7 +400,7 @@ func TestNilSlice(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Slice(uint32(len(s)), StringKind)
 
-	d := GetDecoder(p.Bytes())
+	d := Decoder(p.Bytes())
 	j, err := d.Slice(StringKind)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(len(s)), j)
@@ -420,15 +418,13 @@ func TestError(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Error(v)
 
-	d := GetDecoder(p.Bytes())
+	d := Decoder(p.Bytes())
 	_, err := d.String()
 	assert.ErrorIs(t, err, InvalidString)
 
 	val, err := d.Error()
 	assert.NoError(t, err)
 	assert.ErrorIs(t, val, v)
-
-	d.Return()
 }
 
 func TestLen(t *testing.T) {

@@ -47,7 +47,7 @@ func (buf *Buffer) WriteRawByte(b byte) {
 
 func (buf *Buffer) Write(b []byte) int {
 	buf.Grow(len(b))
-	buf.offset += copy(buf.b[buf.offset:cap(buf.b)], b)
+	buf.offset += copy(buf.b[buf.offset:], b)
 	return len(b)
 }
 

@@ -85,28 +85,26 @@ func decodeSlice(b []byte, kind Kind) ([]byte, uint32, error) {
 	return b, 0, InvalidSlice
 }
 
-func decodeBytes(b, ret []byte) ([]byte, []byte, error) {
-	if len(b) > 0 {
-		if b[0] == BytesRawKind {
-			var size uint32
-			var err error
-			b, size, err = decodeUint32(b[1:])
-			if err != nil {
-				return b, nil, InvalidBytes
-			}
-			if len(b) > int(size)-1 {
-				if len(ret) < int(size) {
-					if ret == nil {
-						ret = make([]byte, size)
-						copy(ret, b[:size])
-					} else {
-						ret = append(ret[:0], b[:size]...)
-					}
+func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
+	if len(b) > 0 && b[0] == BytesRawKind {
+		var size uint32
+		var err error
+		b, size, err = decodeUint32(b[1:])
+		if err != nil {
+			return b, nil, InvalidBytes
+		}
+		if len(b) > int(size)-1 {
+			if len(ret) < int(size) {
+				if ret == nil {
+					ret = make([]byte, size)
+					copy(ret, b[:size])
 				} else {
-					copy(ret[0:], b[:size])
+					ret = append(ret[:0], b[:size]...)
 				}
-				return b[size:], ret, nil
+			} else {
+				copy(ret[0:], b[:size])
 			}
+			return b[size:], ret, nil
 		}
 	}
 	return b, nil, InvalidBytes
