@@ -16,12 +16,6 @@
 
 package polyglot
 
-import (
-	"sync"
-)
-
-var decoderPool sync.Pool
-
 type BufferDecoder []byte
 
 func Decoder(b []byte) *BufferDecoder {
