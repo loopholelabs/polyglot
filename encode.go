@@ -23,22 +23,23 @@ import (
 )
 
 var (
-	NilRawKind     = byte(0)
-	SliceRawKind   = byte(1)
-	MapRawKind     = byte(2)
-	AnyRawKind     = byte(3)
-	BytesRawKind   = byte(4)
-	StringRawKind  = byte(5)
-	ErrorRawKind   = byte(6)
-	BoolRawKind    = byte(7)
-	Uint8RawKind   = byte(8)
-	Uint16RawKind  = byte(9)
-	Uint32RawKind  = byte(10)
-	Uint64RawKind  = byte(11)
-	Int32RawKind   = byte(12)
-	Int64RawKind   = byte(13)
-	Float32RawKind = byte(14)
-	Float64RawKind = byte(15)
+	NilRawKind          = byte(0)
+	SliceRawKind        = byte(1)
+	MapRawKind          = byte(2)
+	AnyRawKind          = byte(3)
+	BytesRawKind        = byte(4)
+	StringRawKind       = byte(5)
+	ErrorRawKind        = byte(6)
+	BoolRawKind         = byte(7)
+	Uint8RawKind        = byte(8)
+	Uint16RawKind       = byte(9)
+	Uint32RawKind       = byte(10)
+	Uint64RawKind       = byte(11)
+	Int32RawKind        = byte(12)
+	Int64RawKind        = byte(13)
+	Float32RawKind      = byte(14)
+	Float64RawKind      = byte(15)
+	StaticUint32RawKind = byte(16)
 )
 
 type Kind byte
@@ -77,34 +78,73 @@ var (
 	trueBool  = byte(1)
 )
 
-func encodeNil(b *Buffer) {
-	b.Grow(1)
+const (
+	nilSize          = 1
+	mapSize          = 3 + staticUint32Size
+	sliceSize        = 2 + staticUint32Size
+	bytesSize        = 1 + staticUint32Size
+	stringSize       = 1 + staticUint32Size
+	errorSize        = 1 + stringSize
+	boolSize         = 2
+	uint8Size        = 2
+	uint16Size       = 1 + VarIntLen16
+	uint32Size       = 1 + VarIntLen32
+	staticUint32Size = 1 + 4
+	uint64Size       = 1 + VarIntLen64
+	float32Size      = 5
+	float64Size      = 9
+)
+
+func EncodeNil(b *Buffer) {
+	b.Grow(nilSize)
+	RawEncodeNil(b)
+}
+
+func RawEncodeNil(b *Buffer) {
 	b.WriteRawByte(NilRawKind)
 }
 
-func encodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.Grow(3)
+func EncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
+	b.Grow(mapSize)
+	RawEncodeMap(b, size, keyKind, valueKind)
+}
+
+func RawEncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
 	b.WriteRawByte(MapRawKind)
 	b.WriteRawByte(byte(keyKind))
 	b.WriteRawByte(byte(valueKind))
-	encodeUint32(b, size)
+	RawStaticEncodeUint32(b, size)
 }
 
-func encodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.Grow(2)
+func EncodeSlice(b *Buffer, size uint32, kind Kind) {
+	b.Grow(sliceSize)
+	RawEncodeSlice(b, size, kind)
+}
+
+func RawEncodeSlice(b *Buffer, size uint32, kind Kind) {
 	b.WriteRawByte(SliceRawKind)
 	b.WriteRawByte(byte(kind))
-	encodeUint32(b, size)
+	RawStaticEncodeUint32(b, size)
 }
 
-func encodeBytes(b *Buffer, value []byte) {
-	b.Grow(1)
+func EncodeBytes(b *Buffer, value []byte) {
+	b.Grow(bytesSize + len(value))
+	RawEncodeBytes(b, value)
+}
+
+//gcassert:inline
+func RawEncodeBytes(b *Buffer, value []byte) {
 	b.WriteRawByte(BytesRawKind)
-	encodeUint32(b, uint32(len(value)))
-	b.Write(value)
+	RawStaticEncodeUint32(b, uint32(len(value)))
+	b.WriteRaw(value)
 }
 
-func encodeString(b *Buffer, value string) {
+func EncodeString(b *Buffer, value string) {
+	b.Grow(stringSize + len(value))
+	RawEncodeString(b, value)
+}
+
+func RawEncodeString(b *Buffer, value string) {
 	var nb []byte
 	/* #nosec G103 */
 	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
@@ -113,20 +153,28 @@ func encodeString(b *Buffer, value string) {
 	bh.Data = sh.Data
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
-	b.Grow(1)
 	b.WriteRawByte(StringRawKind)
-	encodeUint32(b, uint32(len(nb)))
-	b.Write(nb)
+	RawStaticEncodeUint32(b, uint32(len(nb)))
+	b.WriteRaw(nb)
 }
 
-func encodeError(b *Buffer, err error) {
-	b.Grow(1)
+func EncodeError(b *Buffer, err error) {
+	errString := err.Error()
+	b.Grow(errorSize + len(errString))
+	RawEncodeError(b, errString)
+}
+
+func RawEncodeError(b *Buffer, errString string) {
 	b.WriteRawByte(ErrorRawKind)
-	encodeString(b, err.Error())
+	RawEncodeString(b, errString)
 }
 
-func encodeBool(b *Buffer, value bool) {
-	b.Grow(2)
+func EncodeBool(b *Buffer, value bool) {
+	b.Grow(boolSize)
+	RawEncodeBool(b, value)
+}
+
+func RawEncodeBool(b *Buffer, value bool) {
 	b.WriteRawByte(BoolRawKind)
 	if value {
 		b.WriteRawByte(trueBool)
@@ -135,81 +183,111 @@ func encodeBool(b *Buffer, value bool) {
 	}
 }
 
-func encodeUint8(b *Buffer, value uint8) {
-	b.Grow(2)
+func EncodeUint8(b *Buffer, value uint8) {
+	b.Grow(uint8Size)
+	RawEncodeUint8(b, value)
+}
+
+func RawEncodeUint8(b *Buffer, value uint8) {
 	b.WriteRawByte(Uint8RawKind)
 	b.WriteRawByte(value)
 }
 
-// Variable integer encoding with the same format as binary.varint
-// (https://developers.google.com/protocol-buffers/docs/encoding#varints)
-func encodeUint16(b *Buffer, value uint16) {
-	b.Grow(VarIntLen16)
+func EncodeUint16(b *Buffer, value uint16) {
+	b.Grow(uint16Size)
+	RawEncodeUint16(b, value)
+}
+
+func RawEncodeUint16(b *Buffer, value uint16) {
 	b.WriteRawByte(Uint16RawKind)
 	for value >= continuation {
-		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
 	b.WriteRawByte(byte(value))
 }
 
-func encodeUint32(b *Buffer, value uint32) {
-	b.Grow(VarIntLen32)
+func EncodeUint32(b *Buffer, value uint32) {
+	b.Grow(uint32Size)
+	RawEncodeUint32(b, value)
+}
+
+func RawEncodeUint32(b *Buffer, value uint32) {
 	b.WriteRawByte(Uint32RawKind)
 	for value >= continuation {
-		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
 	b.WriteRawByte(byte(value))
 }
 
-func encodeUint64(b *Buffer, value uint64) {
-	b.Grow(VarIntLen64)
+//gcassert:inline
+func RawStaticEncodeUint32(b *Buffer, value uint32) {
+	b.WriteRawByte(StaticUint32RawKind)
+	b.WriteRawByte(byte(value >> 24))
+	b.WriteRawByte(byte(value >> 16))
+	b.b[b.offset] = byte(value >> 8)
+	b.offset++
+	b.b[b.offset] = byte(value)
+	b.offset++
+}
+
+func EncodeUint64(b *Buffer, value uint64) {
+	b.Grow(uint64Size)
+	RawEncodeUint64(b, value)
+}
+
+func RawEncodeUint64(b *Buffer, value uint64) {
 	b.WriteRawByte(Uint64RawKind)
 	for value >= continuation {
-		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		b.WriteRawByte(byte(value) | continuation)
 		value >>= 7
 	}
 	b.WriteRawByte(byte(value))
 }
 
-func encodeInt32(b *Buffer, value int32) {
-	b.Grow(VarIntLen32)
+func EncodeInt32(b *Buffer, value int32) {
+	b.Grow(uint32Size)
+	RawEncodeInt32(b, value)
+}
+
+func RawEncodeInt32(b *Buffer, value int32) {
 	b.WriteRawByte(Int32RawKind)
-	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint32(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
 	for castValue >= continuation {
-		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		b.WriteRawByte(byte(castValue) | continuation)
 		castValue >>= 7
 	}
 	b.WriteRawByte(byte(castValue))
 }
 
-func encodeInt64(b *Buffer, value int64) {
-	b.Grow(VarIntLen64)
+func EncodeInt64(b *Buffer, value int64) {
+	b.Grow(uint64Size)
+	RawEncodeInt64(b, value)
+}
+
+func RawEncodeInt64(b *Buffer, value int64) {
 	b.WriteRawByte(Int64RawKind)
-	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint64(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
 	for castValue >= continuation {
-		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
 		b.WriteRawByte(byte(castValue) | continuation)
 		castValue >>= 7
 	}
 	b.WriteRawByte(byte(castValue))
 }
 
-func encodeFloat32(b *Buffer, value float32) {
-	b.Grow(5)
+func EncodeFloat32(b *Buffer, value float32) {
+	b.Grow(float32Size)
+	RawEncodeFloat32(b, value)
+}
+
+func RawEncodeFloat32(b *Buffer, value float32) {
 	b.WriteRawByte(Float32RawKind)
 	castValue := math.Float32bits(value)
 	b.WriteRawByte(byte(castValue >> 24))
@@ -218,8 +296,12 @@ func encodeFloat32(b *Buffer, value float32) {
 	b.WriteRawByte(byte(castValue))
 }
 
-func encodeFloat64(b *Buffer, value float64) {
-	b.Grow(9)
+func EncodeFloat64(b *Buffer, value float64) {
+	b.Grow(float64Size)
+	RawEncodeFloat64(b, value)
+}
+
+func RawEncodeFloat64(b *Buffer, value float64) {
 	b.WriteRawByte(Float64RawKind)
 	castValue := math.Float64bits(value)
 	b.WriteRawByte(byte(castValue >> 56))

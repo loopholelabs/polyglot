@@ -60,7 +60,7 @@ func decodeMap(b []byte, keyKind, valueKind Kind) ([]byte, uint32, error) {
 		if b[0] == MapRawKind && b[1] == byte(keyKind) && b[2] == byte(valueKind) {
 			var size uint32
 			var err error
-			b, size, err = decodeUint32(b[3:])
+			b, size, err = decodeStaticUint32(b[3:])
 			if err != nil {
 				return b, 0, InvalidMap
 			}
@@ -75,7 +75,7 @@ func decodeSlice(b []byte, kind Kind) ([]byte, uint32, error) {
 		if b[0] == SliceRawKind && b[1] == byte(kind) {
 			var size uint32
 			var err error
-			b, size, err = decodeUint32(b[2:])
+			b, size, err = decodeStaticUint32(b[2:])
 			if err != nil {
 				return b, 0, InvalidSlice
 			}
@@ -89,7 +89,7 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 	if len(b) > 0 && b[0] == BytesRawKind {
 		var size uint32
 		var err error
-		b, size, err = decodeUint32(b[1:])
+		b, size, err = decodeStaticUint32(b[1:])
 		if err != nil {
 			return b, nil, InvalidBytes
 		}
@@ -115,7 +115,7 @@ func decodeString(b []byte) ([]byte, string, error) {
 		if b[0] == StringRawKind {
 			var size uint32
 			var err error
-			b, size, err = decodeUint32(b[1:])
+			b, size, err = decodeStaticUint32(b[1:])
 			if err != nil {
 				return b, emptyString, InvalidString
 			}
@@ -209,6 +209,13 @@ func decodeUint32(b []byte) ([]byte, uint32, error) {
 	return b, 0, InvalidUint32
 }
 
+func decodeStaticUint32(b []byte) ([]byte, uint32, error) {
+	if len(b) > 4 && b[0] == StaticUint32RawKind {
+		return b[5:], uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24, nil
+	}
+	return b, 0, InvalidUint32
+}
+
 func decodeUint64(b []byte) ([]byte, uint64, error) {
 	if len(b) > 1 && b[0] == Uint64RawKind {
 		var x uint64
@@ -289,20 +296,16 @@ func decodeInt64(b []byte) ([]byte, int64, error) {
 }
 
 func decodeFloat32(b []byte) ([]byte, float32, error) {
-	if len(b) > 4 {
-		if b[0] == Float32RawKind {
-			return b[5:], math.Float32frombits(uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24), nil
-		}
+	if len(b) > 4 && b[0] == Float32RawKind {
+		return b[5:], math.Float32frombits(uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24), nil
 	}
 	return b, 0, InvalidFloat32
 }
 
 func decodeFloat64(b []byte) ([]byte, float64, error) {
-	if len(b) > 8 {
-		if b[0] == Float64RawKind {
-			return b[9:], math.Float64frombits(uint64(b[8]) | uint64(b[7])<<8 | uint64(b[6])<<16 | uint64(b[5])<<24 |
-				uint64(b[4])<<32 | uint64(b[3])<<40 | uint64(b[2])<<48 | uint64(b[1])<<56), nil
-		}
+	if len(b) > 8 && b[0] == Float64RawKind {
+		return b[9:], math.Float64frombits(uint64(b[8]) | uint64(b[7])<<8 | uint64(b[6])<<16 | uint64(b[5])<<24 |
+			uint64(b[4])<<32 | uint64(b[3])<<40 | uint64(b[2])<<48 | uint64(b[1])<<56), nil
 	}
 	return b, 0, InvalidFloat64
 }
