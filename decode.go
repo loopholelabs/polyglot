@@ -104,7 +104,7 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 					ret = append(ret[:0], b[:size]...)
 				}
 			} else {
-				copy(ret[0:], b[:size])
+				mem.Copy(ret[0:], b[:size])
 			}
 			return b[size:], ret, nil
 		}
