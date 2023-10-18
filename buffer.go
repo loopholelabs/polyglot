@@ -16,6 +16,8 @@
 
 package polyglot
 
+import "github.com/segmentio/asm/mem"
+
 const (
 	defaultSize = 512
 )
@@ -51,13 +53,13 @@ func (buf *Buffer) WriteRawByte(b byte) {
 //gcassert:inline
 func (buf *Buffer) Write(b []byte) int {
 	buf.Grow(len(b))
-	buf.offset += copy(buf.b[buf.offset:], b)
+	buf.offset += mem.Copy(buf.b[buf.offset:], b)
 	return len(b)
 }
 
 //gcassert:inline
 func (buf *Buffer) WriteRaw(b []byte) {
-	buf.offset += copy(buf.b[buf.offset:], b)
+	buf.offset += mem.Copy(buf.b[buf.offset:], b)
 }
 
 func NewBuffer() *Buffer {
