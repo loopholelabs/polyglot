@@ -19,6 +19,8 @@ package polyglot
 import (
 	"errors"
 	"math"
+
+	"github.com/segmentio/asm/mem"
 )
 
 const (
@@ -97,7 +99,7 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 			if len(ret) < int(size) {
 				if ret == nil {
 					ret = make([]byte, size)
-					copy(ret, b[:size])
+					mem.Copy(ret, b[:size])
 				} else {
 					ret = append(ret[:0], b[:size]...)
 				}
