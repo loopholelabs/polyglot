@@ -25,12 +25,18 @@ type Buffer struct {
 	offset int
 }
 
+func NewBuffer() *Buffer {
+	return &Buffer{
+		b:      make([]byte, defaultSize),
+		offset: 0,
+	}
+}
+
 func (buf *Buffer) Reset() {
 	buf.offset = 0
 }
 
-// Grow increases the capacity of the buffer by n
-func (buf *Buffer) Grow(n int) {
+func (buf *Buffer) grow(n int) {
 	if cap(buf.b)-buf.offset < n {
 		if cap(buf.b) < n {
 			buf.b = append(buf.b[:buf.offset], make([]byte, n+cap(buf.b)-buf.offset)...)
@@ -40,34 +46,10 @@ func (buf *Buffer) Grow(n int) {
 	}
 }
 
-func (buf *Buffer) WriteRawByte(b byte) {
-	buf.b[buf.offset] = b
-	buf.offset++
-}
-
-func (buf *Buffer) WriteRawByteDirect(b byte, offset int) {
-	buf.b[buf.offset+offset] = b
-}
-
-func (buf *Buffer) AddOffset(offset int) {
-	buf.offset += offset
-}
-
 func (buf *Buffer) Write(b []byte) int {
-	buf.Grow(len(b))
+	buf.grow(len(b))
 	buf.offset += copy(buf.b[buf.offset:], b)
 	return len(b)
-}
-
-func (buf *Buffer) WriteRaw(b []byte) {
-	buf.offset += copy(buf.b[buf.offset:], b)
-}
-
-func NewBuffer() *Buffer {
-	return &Buffer{
-		b:      make([]byte, defaultSize),
-		offset: 0,
-	}
 }
 
 func (buf *Buffer) Bytes() []byte {

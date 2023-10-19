@@ -94,51 +94,59 @@ const (
 )
 
 func EncodeNil(b *Buffer) {
-	b.Grow(nilSize)
+	b.grow(nilSize)
 	RawEncodeNil(b)
 }
 
 func RawEncodeNil(b *Buffer) {
-	b.WriteRawByte(NilRawKind)
+	b.b[b.offset] = NilRawKind
+	b.offset++
 }
 
 func EncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.Grow(mapSize)
+	b.grow(mapSize)
 	RawEncodeMap(b, size, keyKind, valueKind)
 }
 
 func RawEncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.WriteRawByteDirect(MapRawKind, 0)
-	b.WriteRawByteDirect(byte(keyKind), 1)
-	b.WriteRawByteDirect(byte(valueKind), 2)
-	b.AddOffset(3)
+	offset := b.offset
+	b.b[offset] = MapRawKind
+	offset++
+	b.b[offset] = byte(keyKind)
+	offset++
+	b.b[offset] = byte(valueKind)
+	b.offset = offset + 1
 	RawEncodeUint32(b, size)
 }
 
 func EncodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.Grow(sliceSize)
+	b.grow(sliceSize)
 	RawEncodeSlice(b, size, kind)
 }
 
 func RawEncodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.WriteRawByte(SliceRawKind)
-	b.WriteRawByte(byte(kind))
+	offset := b.offset
+	b.b[offset] = SliceRawKind
+	offset++
+	b.b[offset] = byte(kind)
+	b.offset = offset + 1
 	RawEncodeUint32(b, size)
 }
 
 func EncodeBytes(b *Buffer, value []byte) {
-	b.Grow(bytesSize + len(value))
+	b.grow(bytesSize + len(value))
 	RawEncodeBytes(b, value)
 }
 
 func RawEncodeBytes(b *Buffer, value []byte) {
-	b.WriteRawByte(BytesRawKind)
+	b.b[b.offset] = BytesRawKind
+	b.offset++
 	RawEncodeUint32(b, uint32(len(value)))
-	b.WriteRaw(value)
+	b.offset += copy(b.b[b.offset:], value)
 }
 
 func EncodeString(b *Buffer, value string) {
-	b.Grow(stringSize + len(value))
+	b.grow(stringSize + len(value))
 	RawEncodeString(b, value)
 }
 
@@ -151,111 +159,135 @@ func RawEncodeString(b *Buffer, value string) {
 	bh.Data = sh.Data
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
-	b.WriteRawByte(StringRawKind)
+	b.b[b.offset] = StringRawKind
+	b.offset++
 	RawEncodeUint32(b, uint32(len(nb)))
-	b.WriteRaw(nb)
+	b.offset += copy(b.b[b.offset:], nb)
 }
 
 func EncodeError(b *Buffer, err error) {
 	errString := err.Error()
-	b.Grow(errorSize + len(errString))
+	b.grow(errorSize + len(errString))
 	RawEncodeError(b, errString)
 }
 
 func RawEncodeError(b *Buffer, errString string) {
-	b.WriteRawByte(ErrorRawKind)
+	b.b[b.offset] = ErrorRawKind
+	b.offset++
 	RawEncodeString(b, errString)
 }
 
 func EncodeBool(b *Buffer, value bool) {
-	b.Grow(boolSize)
+	b.grow(boolSize)
 	RawEncodeBool(b, value)
 }
 
 func RawEncodeBool(b *Buffer, value bool) {
-	b.WriteRawByte(BoolRawKind)
+	offset := b.offset
+	b.b[offset] = BoolRawKind
+	offset++
 	if value {
-		b.WriteRawByte(trueBool)
+		b.b[offset] = trueBool
 	} else {
-		b.WriteRawByte(falseBool)
+		b.b[offset] = falseBool
 	}
+	b.offset = offset + 1
 }
 
 func EncodeUint8(b *Buffer, value uint8) {
-	b.Grow(uint8Size)
+	b.grow(uint8Size)
 	RawEncodeUint8(b, value)
 }
 
 func RawEncodeUint8(b *Buffer, value uint8) {
-	b.WriteRawByte(Uint8RawKind)
-	b.WriteRawByte(value)
+	offset := b.offset
+	b.b[offset] = Uint8RawKind
+	offset++
+	b.b[offset] = value
+	b.offset = offset + 1
 }
 
 func EncodeUint16(b *Buffer, value uint16) {
-	b.Grow(uint16Size)
+	b.grow(uint16Size)
 	RawEncodeUint16(b, value)
 }
 
 func RawEncodeUint16(b *Buffer, value uint16) {
-	b.WriteRawByte(Uint16RawKind)
-	if value < (1 << 7) {
-		b.WriteRawByte(byte(value))
+	offset := b.offset
+	b.b[offset] = Uint16RawKind
+	offset++
+	if value < continuation {
+		b.b[offset] = byte(value)
+		b.offset = offset + 1
 	} else {
-		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+		b.b[offset] = byte(value&(continuation-1)) | continuation
+		offset++
 		value >>= 7
-		if value < (1 << 7) {
-			b.WriteRawByte(byte(value))
+		if value < continuation {
+			b.b[offset] = byte(value)
+			b.offset = offset + 1
 		} else {
-			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			b.b[offset] = byte(value&(continuation-1)) | continuation
+			offset++
 			value >>= 7
-			if value < (1 << 7) {
-				b.WriteRawByte(byte(value))
+			if value < continuation {
+				b.b[offset] = byte(value)
+				b.offset = offset + 1
 			} else {
-				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
-				b.WriteRawByte(byte(value >> 7))
+				b.b[offset] = byte(value&(continuation-1)) | continuation
+				offset++
+				b.b[offset] = byte(value >> 7)
+				b.offset = offset + 1
 			}
 		}
 	}
 }
 
 func EncodeUint32(b *Buffer, value uint32) {
-	b.Grow(uint32Size)
+	b.grow(uint32Size)
 	RawEncodeUint32(b, value)
 }
 
 func RawEncodeUint32(b *Buffer, value uint32) {
-	b.WriteRawByteDirect(Uint32RawKind, 0)
-	if value < (1 << 7) {
-		b.WriteRawByteDirect(byte(value), 1)
-		b.AddOffset(2)
+	offset := b.offset
+	b.b[offset] = Uint32RawKind
+	offset++
+	if value < continuation {
+		b.b[offset] = byte(value)
+		b.offset = offset + 1
 	} else {
-		b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 1)
+		b.b[offset] = byte(value&(continuation-1)) | continuation
+		offset++
 		value >>= 7
-		if value < (1 << 7) {
-			b.WriteRawByteDirect(byte(value), 2)
-			b.AddOffset(3)
+		if value < continuation {
+			b.b[offset] = byte(value)
+			b.offset = offset + 1
 		} else {
-			b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 2)
+			b.b[offset] = byte(value&(continuation-1)) | continuation
+			offset++
 			value >>= 7
-			if value < (1 << 7) {
-				b.WriteRawByteDirect(byte(value), 3)
-				b.AddOffset(4)
+			if value < continuation {
+				b.b[offset] = byte(value)
+				b.offset = offset + 1
 			} else {
-				b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 3)
+				b.b[offset] = byte(value&(continuation-1)) | continuation
+				offset++
 				value >>= 7
-				if value < (1 << 7) {
-					b.WriteRawByteDirect(byte(value), 4)
-					b.AddOffset(5)
+				if value < continuation {
+					b.b[offset] = byte(value)
+					b.offset = offset + 1
 				} else {
-					b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 4)
+					b.b[offset] = byte(value&(continuation-1)) | continuation
+					offset++
 					value >>= 7
-					if value < (1 << 7) {
-						b.WriteRawByteDirect(byte(value), 5)
-						b.AddOffset(6)
+					if value < continuation {
+						b.b[offset] = byte(value)
+						b.offset = offset + 1
 					} else {
-						b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 5)
-						b.WriteRawByteDirect(byte(value>>7), 6)
-						b.AddOffset(7)
+						b.b[offset] = byte(value&(continuation-1)) | continuation
+						offset++
+						b.b[offset] = byte(value >> 7)
+						b.offset = offset + 1
 					}
 				}
 			}
@@ -264,67 +296,78 @@ func RawEncodeUint32(b *Buffer, value uint32) {
 }
 
 func EncodeUint64(b *Buffer, value uint64) {
-	b.Grow(uint64Size)
+	b.grow(uint64Size)
 	RawEncodeUint64(b, value)
 }
 
 func RawEncodeUint64(b *Buffer, value uint64) {
-	b.WriteRawByteDirect(Uint64RawKind, 0)
-	if value < (1 << 7) {
-		b.WriteRawByteDirect(byte(value), 1)
-		b.AddOffset(2)
+	offset := b.offset
+	b.b[offset] = Uint64RawKind
+	offset++
+	if value < continuation {
+		b.b[offset] = byte(value)
+		b.offset = offset + 1
 	} else {
-		b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 1)
+		b.b[offset] = byte(value&(continuation-1)) | continuation
+		offset++
 		value >>= 7
-		if value < (1 << 7) {
-			b.WriteRawByteDirect(byte(value), 2)
-			b.AddOffset(3)
+		if value < continuation {
+			b.b[offset] = byte(value)
+			b.offset = offset + 1
 		} else {
-			b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 2)
+			b.b[offset] = byte(value&(continuation-1)) | continuation
+			offset++
 			value >>= 7
-			if value < (1 << 7) {
-				b.WriteRawByteDirect(byte(value), 3)
-				b.AddOffset(4)
+			if value < continuation {
+				b.b[offset] = byte(value)
+				b.offset = offset + 1
 			} else {
-				b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 3)
+				b.b[offset] = byte(value&(continuation-1)) | continuation
+				offset++
 				value >>= 7
-				if value < (1 << 7) {
-					b.WriteRawByteDirect(byte(value), 4)
-					b.AddOffset(5)
+				if value < continuation {
+					b.b[offset] = byte(value)
+					b.offset = offset + 1
 				} else {
-					b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 4)
+					b.b[offset] = byte(value&(continuation-1)) | continuation
+					offset++
 					value >>= 7
-					if value < (1 << 7) {
-						b.WriteRawByteDirect(byte(value), 5)
-						b.AddOffset(6)
+					if value < continuation {
+						b.b[offset] = byte(value)
+						b.offset = offset + 1
 					} else {
-						b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 5)
+						b.b[offset] = byte(value&(continuation-1)) | continuation
+						offset++
 						value >>= 7
-						if value < (1 << 7) {
-							b.WriteRawByteDirect(byte(value), 6)
-							b.AddOffset(7)
+						if value < continuation {
+							b.b[offset] = byte(value)
+							b.offset = offset + 1
 						} else {
-							b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 6)
+							b.b[offset] = byte(value&(continuation-1)) | continuation
+							offset++
 							value >>= 7
-							if value < (1 << 7) {
-								b.WriteRawByteDirect(byte(value), 7)
-								b.AddOffset(8)
+							if value < continuation {
+								b.b[offset] = byte(value)
+								b.offset = offset + 1
 							} else {
-								b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 7)
+								b.b[offset] = byte(value&(continuation-1)) | continuation
+								offset++
 								value >>= 7
-								if value < (1 << 7) {
-									b.WriteRawByteDirect(byte(value), 8)
-									b.AddOffset(9)
+								if value < continuation {
+									b.b[offset] = byte(value)
+									b.offset = offset + 1
 								} else {
-									b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 8)
+									b.b[offset] = byte(value&(continuation-1)) | continuation
+									offset++
 									value >>= 7
-									if value < (1 << 7) {
-										b.WriteRawByteDirect(byte(value), 9)
-										b.AddOffset(10)
+									if value < continuation {
+										b.b[offset] = byte(value)
+										b.offset = offset + 1
 									} else {
-										b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 9)
-										b.WriteRawByteDirect(byte(value>>7), 10)
-										b.AddOffset(11)
+										b.b[offset] = byte(value&(continuation-1)) | continuation
+										offset++
+										b.b[offset] = byte(value >> 7)
+										b.offset = offset + 1
 									}
 								}
 							}
@@ -337,7 +380,7 @@ func RawEncodeUint64(b *Buffer, value uint64) {
 }
 
 func EncodeInt32(b *Buffer, value int32) {
-	b.Grow(uint32Size)
+	b.grow(uint32Size)
 	RawEncodeInt32(b, value)
 }
 
@@ -346,38 +389,45 @@ func RawEncodeInt32(b *Buffer, value int32) {
 	if value < 0 {
 		castValue = ^castValue
 	}
-	b.WriteRawByteDirect(Int32RawKind, 0)
-	if castValue < (1 << 7) {
-		b.WriteRawByteDirect(byte(castValue), 1)
-		b.AddOffset(2)
+	offset := b.offset
+	b.b[offset] = Int32RawKind
+	offset++
+	if castValue < continuation {
+		b.b[offset] = byte(castValue)
+		b.offset = offset + 1
 	} else {
-		b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 1)
+		b.b[offset] = byte(castValue&(continuation-1)) | continuation
+		offset++
 		castValue >>= 7
-		if castValue < (1 << 7) {
-			b.WriteRawByteDirect(byte(castValue), 2)
-			b.AddOffset(3)
+		if castValue < continuation {
+			b.b[offset] = byte(castValue)
+			b.offset = offset + 1
 		} else {
-			b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 2)
+			b.b[offset] = byte(castValue&(continuation-1)) | continuation
+			offset++
 			castValue >>= 7
-			if castValue < (1 << 7) {
-				b.WriteRawByteDirect(byte(castValue), 3)
-				b.AddOffset(4)
+			if castValue < continuation {
+				b.b[offset] = byte(castValue)
+				b.offset = offset + 1
 			} else {
-				b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 3)
+				b.b[offset] = byte(castValue&(continuation-1)) | continuation
+				offset++
 				castValue >>= 7
-				if castValue < (1 << 7) {
-					b.WriteRawByteDirect(byte(castValue), 4)
-					b.AddOffset(5)
+				if castValue < continuation {
+					b.b[offset] = byte(castValue)
+					b.offset = offset + 1
 				} else {
-					b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 4)
+					b.b[offset] = byte(castValue&(continuation-1)) | continuation
+					offset++
 					castValue >>= 7
-					if castValue < (1 << 7) {
-						b.WriteRawByteDirect(byte(castValue), 5)
-						b.AddOffset(6)
+					if castValue < continuation {
+						b.b[offset] = byte(castValue)
+						b.offset = offset + 1
 					} else {
-						b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 5)
-						b.WriteRawByteDirect(byte(castValue>>7), 6)
-						b.AddOffset(7)
+						b.b[offset] = byte(castValue&(continuation-1)) | continuation
+						offset++
+						b.b[offset] = byte(castValue >> 7)
+						b.offset = offset + 1
 					}
 				}
 			}
@@ -386,7 +436,7 @@ func RawEncodeInt32(b *Buffer, value int32) {
 }
 
 func EncodeInt64(b *Buffer, value int64) {
-	b.Grow(uint64Size)
+	b.grow(uint64Size)
 	RawEncodeInt64(b, value)
 }
 
@@ -395,62 +445,73 @@ func RawEncodeInt64(b *Buffer, value int64) {
 	if value < 0 {
 		castValue = ^castValue
 	}
-	b.WriteRawByteDirect(Int64RawKind, 0)
-	if castValue < (1 << 7) {
-		b.WriteRawByteDirect(byte(castValue), 1)
-		b.AddOffset(2)
+	offset := b.offset
+	b.b[offset] = Int64RawKind
+	offset++
+	if castValue < continuation {
+		b.b[offset] = byte(castValue)
+		b.offset = offset + 1
 	} else {
-		b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 1)
+		b.b[offset] = byte(castValue&(continuation-1)) | continuation
+		offset++
 		castValue >>= 7
-		if castValue < (1 << 7) {
-			b.WriteRawByteDirect(byte(castValue), 2)
-			b.AddOffset(3)
+		if castValue < continuation {
+			b.b[offset] = byte(castValue)
+			b.offset = offset + 1
 		} else {
-			b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 2)
+			b.b[offset] = byte(castValue&(continuation-1)) | continuation
+			offset++
 			castValue >>= 7
-			if castValue < (1 << 7) {
-				b.WriteRawByteDirect(byte(castValue), 3)
-				b.AddOffset(4)
+			if castValue < continuation {
+				b.b[offset] = byte(castValue)
+				b.offset = offset + 1
 			} else {
-				b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 3)
+				b.b[offset] = byte(castValue&(continuation-1)) | continuation
+				offset++
 				castValue >>= 7
-				if castValue < (1 << 7) {
-					b.WriteRawByteDirect(byte(castValue), 4)
-					b.AddOffset(5)
+				if castValue < continuation {
+					b.b[offset] = byte(castValue)
+					b.offset = offset + 1
 				} else {
-					b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 4)
+					b.b[offset] = byte(castValue&(continuation-1)) | continuation
+					offset++
 					castValue >>= 7
-					if castValue < (1 << 7) {
-						b.WriteRawByteDirect(byte(castValue), 5)
-						b.AddOffset(6)
+					if castValue < continuation {
+						b.b[offset] = byte(castValue)
+						b.offset = offset + 1
 					} else {
-						b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 5)
+						b.b[offset] = byte(castValue&(continuation-1)) | continuation
+						offset++
 						castValue >>= 7
-						if castValue < (1 << 7) {
-							b.WriteRawByteDirect(byte(castValue), 6)
-							b.AddOffset(7)
+						if castValue < continuation {
+							b.b[offset] = byte(castValue)
+							b.offset = offset + 1
 						} else {
-							b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 6)
+							b.b[offset] = byte(castValue&(continuation-1)) | continuation
+							offset++
 							castValue >>= 7
-							if castValue < (1 << 7) {
-								b.WriteRawByteDirect(byte(castValue), 7)
-								b.AddOffset(8)
+							if castValue < continuation {
+								b.b[offset] = byte(castValue)
+								b.offset = offset + 1
 							} else {
-								b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 7)
+								b.b[offset] = byte(castValue&(continuation-1)) | continuation
+								offset++
 								castValue >>= 7
-								if castValue < (1 << 7) {
-									b.WriteRawByteDirect(byte(castValue), 8)
-									b.AddOffset(9)
+								if castValue < continuation {
+									b.b[offset] = byte(castValue)
+									b.offset = offset + 1
 								} else {
-									b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 8)
+									b.b[offset] = byte(castValue&(continuation-1)) | continuation
+									offset++
 									castValue >>= 7
-									if castValue < (1 << 7) {
-										b.WriteRawByteDirect(byte(castValue), 9)
-										b.AddOffset(10)
+									if castValue < continuation {
+										b.b[offset] = byte(castValue)
+										b.offset = offset + 1
 									} else {
-										b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 9)
-										b.WriteRawByteDirect(byte(castValue>>7), 10)
-										b.AddOffset(11)
+										b.b[offset] = byte(castValue&(continuation-1)) | continuation
+										offset++
+										b.b[offset] = byte(castValue >> 7)
+										b.offset = offset + 1
 									}
 								}
 							}
@@ -463,33 +524,49 @@ func RawEncodeInt64(b *Buffer, value int64) {
 }
 
 func EncodeFloat32(b *Buffer, value float32) {
-	b.Grow(float32Size)
+	b.grow(float32Size)
 	RawEncodeFloat32(b, value)
 }
 
 func RawEncodeFloat32(b *Buffer, value float32) {
-	b.WriteRawByte(Float32RawKind)
+	offset := b.offset
+	b.b[offset] = Float32RawKind
+	offset++
 	castValue := math.Float32bits(value)
-	b.WriteRawByte(byte(castValue >> 24))
-	b.WriteRawByte(byte(castValue >> 16))
-	b.WriteRawByte(byte(castValue >> 8))
-	b.WriteRawByte(byte(castValue))
+	b.b[offset] = byte(castValue >> 24)
+	offset++
+	b.b[offset] = byte(castValue >> 16)
+	offset++
+	b.b[offset] = byte(castValue >> 8)
+	offset++
+	b.b[offset] = byte(castValue)
+	b.offset = offset + 1
 }
 
 func EncodeFloat64(b *Buffer, value float64) {
-	b.Grow(float64Size)
+	b.grow(float64Size)
 	RawEncodeFloat64(b, value)
 }
 
 func RawEncodeFloat64(b *Buffer, value float64) {
-	b.WriteRawByte(Float64RawKind)
+	offset := b.offset
+	b.b[offset] = Float64RawKind
+	offset++
 	castValue := math.Float64bits(value)
-	b.WriteRawByte(byte(castValue >> 56))
-	b.WriteRawByte(byte(castValue >> 48))
-	b.WriteRawByte(byte(castValue >> 40))
-	b.WriteRawByte(byte(castValue >> 32))
-	b.WriteRawByte(byte(castValue >> 24))
-	b.WriteRawByte(byte(castValue >> 16))
-	b.WriteRawByte(byte(castValue >> 8))
-	b.WriteRawByte(byte(castValue))
+	b.b[offset] = byte(castValue >> 56)
+	offset++
+	b.b[offset] = byte(castValue >> 48)
+	offset++
+	b.b[offset] = byte(castValue >> 40)
+	offset++
+	b.b[offset] = byte(castValue >> 32)
+	offset++
+	b.b[offset] = byte(castValue >> 24)
+	offset++
+	b.b[offset] = byte(castValue >> 16)
+	offset++
+	b.b[offset] = byte(castValue >> 8)
+	offset++
+	b.b[offset] = byte(castValue)
+	b.offset = offset + 1
 }
