@@ -56,7 +56,7 @@ func TestEncoderMap(t *testing.T) {
 		e.String(k).Uint32(v)
 	}
 
-	assert.Equal(t, 1+1+1+1+4+len(m)*(1+1+1+1+1+4), len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1+1+len(m)*(1+1+1+1+1+1), len(p.Bytes()))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -83,7 +83,7 @@ func TestEncoderSlice(t *testing.T) {
 		e.String(k).Uint32(v)
 	}
 
-	assert.Equal(t, 1+1+1+1+4+len(m)*(1+1+1+1+1+4), len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1+1+len(m)*(1+1+1+1+1+1), len(p.Bytes()))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -104,8 +104,8 @@ func TestEncoderBytes(t *testing.T) {
 
 	Encoder(p).Bytes(v)
 
-	assert.Equal(t, 1+1+4+len(v), len(p.Bytes()))
-	assert.Equal(t, v, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(v), len(p.Bytes()))
+	assert.Equal(t, v, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -124,8 +124,8 @@ func TestEncoderString(t *testing.T) {
 
 	Encoder(p).String(v)
 
-	assert.Equal(t, 1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -144,8 +144,8 @@ func TestEncoderError(t *testing.T) {
 
 	Encoder(p).Error(v)
 
-	assert.Equal(t, 1+1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+1+4:])
+	assert.Equal(t, 1+1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {

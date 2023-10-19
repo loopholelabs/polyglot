@@ -60,7 +60,7 @@ func decodeMap(b []byte, keyKind, valueKind Kind) ([]byte, uint32, error) {
 		if b[0] == MapRawKind && b[1] == byte(keyKind) && b[2] == byte(valueKind) {
 			var size uint32
 			var err error
-			b, size, err = decodeStaticUint32(b[3:])
+			b, size, err = decodeUint32(b[3:])
 			if err != nil {
 				return b, 0, InvalidMap
 			}
@@ -75,7 +75,7 @@ func decodeSlice(b []byte, kind Kind) ([]byte, uint32, error) {
 		if b[0] == SliceRawKind && b[1] == byte(kind) {
 			var size uint32
 			var err error
-			b, size, err = decodeStaticUint32(b[2:])
+			b, size, err = decodeUint32(b[2:])
 			if err != nil {
 				return b, 0, InvalidSlice
 			}
@@ -89,7 +89,7 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 	if len(b) > 0 && b[0] == BytesRawKind {
 		var size uint32
 		var err error
-		b, size, err = decodeStaticUint32(b[1:])
+		b, size, err = decodeUint32(b[1:])
 		if err != nil {
 			return b, nil, InvalidBytes
 		}
@@ -115,7 +115,7 @@ func decodeString(b []byte) ([]byte, string, error) {
 		if b[0] == StringRawKind {
 			var size uint32
 			var err error
-			b, size, err = decodeStaticUint32(b[1:])
+			b, size, err = decodeUint32(b[1:])
 			if err != nil {
 				return b, emptyString, InvalidString
 			}
@@ -164,24 +164,23 @@ func decodeUint8(b []byte) ([]byte, uint8, error) {
 	return b, 0, InvalidUint8
 }
 
-// Variable integer encoding with the same format as binary.varint
-// (https://developers.google.com/protocol-buffers/docs/encoding#varints)
 func decodeUint16(b []byte) ([]byte, uint16, error) {
 	if len(b) > 1 && b[0] == Uint16RawKind {
-		var x uint16
-		var s uint
-		for i := 1; i < VarIntLen16+1; i++ {
-			cb := b[i]
-			// Check if msb is set signifying a continuation byte
-			if cb < continuation {
-				if i > VarIntLen16 && cb > 1 {
-					return b, 0, InvalidUint32
-				}
-				// End of varint, add the last bits and advance the buffer
-				return b[i+1:], x | uint16(cb)<<s, nil
-			}
-			x |= uint16(cb&(continuation-1)) << s
-			s += 7
+		cb := uint16(b[1])
+		if cb < continuation {
+			return b[2:], cb, nil
+		}
+
+		x := cb & (continuation - 1)
+		cb = uint16(b[2])
+		if cb < continuation {
+			return b[3:], x | (cb << 7), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 7
+		cb = uint16(b[3])
+		if cb < continuation {
+			return b[4:], x | (cb << 14), nil
 		}
 	}
 	return b, 0, InvalidUint16
@@ -217,59 +216,69 @@ func decodeUint32(b []byte) ([]byte, uint32, error) {
 		if cb < continuation {
 			return b[6:], x | (cb << 28), nil
 		}
-
-		//count += more
-		//cb = uint32(b[6])
-		//x |= more * ((cb & (continuation - 1)) << 35)
-		//more &= (cb & continuation) >> 7
-
-		//return b, 0, InvalidUint32
-		//
-		//var x uint32
-		//var s uint
-		//for i := 1; i < VarIntLen32+1; i++ {
-		//	cb := _b[i]
-		//	// Check if msb is set signifying a continuation byte
-		//	if cb < continuation {
-		//		if i > VarIntLen32 && cb > 1 {
-		//			return _b, 0, InvalidUint32
-		//		}
-		//		// End of varint, add the last bits and advance the buffer
-		//		return _b[i+1:], x | uint32(cb)<<s, nil
-		//	}
-		//	// Add the lower 7 bits to the result and continue to the next byte
-		//	x |= uint32(cb&(continuation-1)) << s
-		//	s += 7
-		//}
-	}
-	return b, 0, InvalidUint32
-}
-
-func decodeStaticUint32(b []byte) ([]byte, uint32, error) {
-	if len(b) > 4 && b[0] == StaticUint32RawKind {
-		return b[5:], uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24, nil
 	}
 	return b, 0, InvalidUint32
 }
 
 func decodeUint64(b []byte) ([]byte, uint64, error) {
 	if len(b) > 1 && b[0] == Uint64RawKind {
-		var x uint64
-		var s uint
-		for i := 1; i < VarIntLen64+1; i++ {
-			cb := b[i]
-			// Check if msb is set signifying a continuation byte
-			if cb < continuation {
-				// Check for overflow
-				if i > VarIntLen64 && cb > 1 {
-					return b, 0, InvalidUint64
-				}
-				// End of varint, add the last bits and advance the buffer
-				return b[i+1:], x | uint64(cb)<<s, nil
-			}
-			// Add the lower 7 bits to the result and continue to the next byte
-			x |= uint64(cb&(continuation-1)) << s
-			s += 7
+		cb := uint64(b[1])
+		if cb < continuation {
+			return b[2:], cb, nil
+		}
+
+		x := cb & (continuation - 1)
+		cb = uint64(b[2])
+		if cb < continuation {
+			return b[3:], x | (cb << 7), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 7
+		cb = uint64(b[3])
+		if cb < continuation {
+			return b[4:], x | (cb << 14), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 14
+		cb = uint64(b[4])
+		if cb < continuation {
+			return b[5:], x | (cb << 21), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 21
+		cb = uint64(b[5])
+		if cb < continuation {
+			return b[6:], x | (cb << 28), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 28
+		cb = uint64(b[6])
+		if cb < continuation {
+			return b[7:], x | (cb << 35), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 35
+		cb = uint64(b[7])
+		if cb < continuation {
+			return b[8:], x | (cb << 42), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 42
+		cb = uint64(b[8])
+		if cb < continuation {
+			return b[9:], x | (cb << 49), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 49
+		cb = uint64(b[9])
+		if cb < continuation {
+			return b[10:], x | (cb << 56), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 56
+		cb = uint64(b[10])
+		if cb < continuation {
+			return b[11:], x | (cb << 63), nil
 		}
 	}
 	return b, 0, InvalidUint64
@@ -331,27 +340,103 @@ func decodeInt32(b []byte) ([]byte, int32, error) {
 
 func decodeInt64(b []byte) ([]byte, int64, error) {
 	if len(b) > 1 && b[0] == Int64RawKind {
-		var ux uint64
-		var s uint
-		for i := 1; i < VarIntLen64+1; i++ {
-			cb := b[i]
-			// Check if msb is set signifying a continuation byte
-			if cb < continuation {
-				if i > VarIntLen64 && cb > 1 {
-					return b, 0, InvalidInt64
-				}
-				// End of varint, add the last bits
-				ux |= uint64(cb) << s
-				// Separate value and sign
-				x := int64(ux >> 1)
-				// If sign bit is set, negate the number
-				if ux&1 != 0 {
-					x = -(x + 1)
-				}
-				return b[i+1:], x, nil
+		cb := uint64(b[1])
+		if cb < continuation {
+			x := int64(cb >> 1)
+			if cb&1 != 0 {
+				x = -(x + 1)
 			}
-			ux |= uint64(cb&(continuation-1)) << s
-			s += 7
+			return b[2:], x, nil
+		}
+
+		x := cb & (continuation - 1)
+		cb = uint64(b[2])
+		if cb < continuation {
+			x |= cb << 7
+			if x&1 != 0 {
+				return b[3:], -(int64(x>>1) + 1), nil
+			}
+			return b[3:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 7
+		cb = uint64(b[3])
+		if cb < continuation {
+			x |= cb << 14
+			if x&1 != 0 {
+				return b[4:], -(int64(x>>1) + 1), nil
+			}
+			return b[4:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 14
+		cb = uint64(b[4])
+		if cb < continuation {
+			x |= cb << 21
+			if x&1 != 0 {
+				return b[5:], -(int64(x>>1) + 1), nil
+			}
+			return b[5:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 21
+		cb = uint64(b[5])
+		if cb < continuation {
+			x |= cb << 28
+			if x&1 != 0 {
+				return b[6:], -(int64(x>>1) + 1), nil
+			}
+			return b[6:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 28
+		cb = uint64(b[6])
+		if cb < continuation {
+			x |= cb << 35
+			if x&1 != 0 {
+				return b[7:], -(int64(x>>1) + 1), nil
+			}
+			return b[7:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 35
+		cb = uint64(b[7])
+		if cb < continuation {
+			x |= cb << 42
+			if x&1 != 0 {
+				return b[8:], -(int64(x>>1) + 1), nil
+			}
+			return b[8:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 42
+		cb = uint64(b[8])
+		if cb < continuation {
+			x |= cb << 49
+			if x&1 != 0 {
+				return b[9:], -(int64(x>>1) + 1), nil
+			}
+			return b[9:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 49
+		cb = uint64(b[9])
+		if cb < continuation {
+			x |= cb << 56
+			if x&1 != 0 {
+				return b[10:], -(int64(x>>1) + 1), nil
+			}
+			return b[10:], int64(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 56
+		cb = uint64(b[10])
+		if cb < continuation {
+			x |= cb << 63
+			if x&1 != 0 {
+				return b[11:], -(int64(x>>1) + 1), nil
+			}
+			return b[11:], int64(x >> 1), nil
 		}
 	}
 	return b, 0, InvalidInt64

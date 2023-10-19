@@ -46,11 +46,11 @@ func TestEncodeMap(t *testing.T) {
 	p := NewBuffer()
 	EncodeMap(p, 32, StringKind, Uint32Kind)
 
-	assert.Equal(t, 1+1+1+1+4, len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1+1, len(p.Bytes()))
 	assert.Equal(t, MapKind, Kind(p.Bytes()[0]))
 	assert.Equal(t, StringKind, Kind(p.Bytes()[1]))
 	assert.Equal(t, Uint32Kind, Kind(p.Bytes()[2]))
-	assert.Equal(t, StaticUint32RawKind, p.Bytes()[3])
+	assert.Equal(t, Uint32RawKind, p.Bytes()[3])
 
 	n := testing.AllocsPerRun(100, func() {
 		EncodeMap(p, 32, StringKind, Uint32Kind)
@@ -65,10 +65,10 @@ func TestEncodeSlice(t *testing.T) {
 	p := NewBuffer()
 	EncodeSlice(p, 32, StringKind)
 
-	assert.Equal(t, 1+1+1+4, len(p.Bytes()))
+	assert.Equal(t, 1+1+1+1, len(p.Bytes()))
 	assert.Equal(t, SliceKind, Kind(p.Bytes()[0]))
 	assert.Equal(t, StringKind, Kind(p.Bytes()[1]))
-	assert.Equal(t, StaticUint32RawKind, p.Bytes()[2])
+	assert.Equal(t, Uint32RawKind, p.Bytes()[2])
 
 	n := testing.AllocsPerRun(100, func() {
 		EncodeSlice(p, 32, StringKind)
@@ -85,8 +85,8 @@ func TestEncodeBytes(t *testing.T) {
 
 	EncodeBytes(p, v)
 
-	assert.Equal(t, 1+1+4+len(v), len(p.Bytes()))
-	assert.Equal(t, v, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(v), len(p.Bytes()))
+	assert.Equal(t, v, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -105,8 +105,8 @@ func TestEncodeString(t *testing.T) {
 
 	EncodeString(p, v)
 
-	assert.Equal(t, 1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+4:])
+	assert.Equal(t, 1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -125,8 +125,8 @@ func TestEncodeError(t *testing.T) {
 
 	EncodeError(p, v)
 
-	assert.Equal(t, 1+1+1+4+len(e), len(p.Bytes()))
-	assert.Equal(t, e, (p.Bytes())[1+1+1+4:])
+	assert.Equal(t, 1+1+1+1+len(e), len(p.Bytes()))
+	assert.Equal(t, e, (p.Bytes())[1+1+1+1:])
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {

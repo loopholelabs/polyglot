@@ -433,5 +433,5 @@ func TestLen(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).String("Hello World")
 
-	assert.Equal(t, 17, p.Len())
+	assert.Equal(t, 14, p.Len())
 }

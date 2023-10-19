@@ -23,23 +23,22 @@ import (
 )
 
 var (
-	NilRawKind          = byte(0)
-	SliceRawKind        = byte(1)
-	MapRawKind          = byte(2)
-	AnyRawKind          = byte(3)
-	BytesRawKind        = byte(4)
-	StringRawKind       = byte(5)
-	ErrorRawKind        = byte(6)
-	BoolRawKind         = byte(7)
-	Uint8RawKind        = byte(8)
-	Uint16RawKind       = byte(9)
-	Uint32RawKind       = byte(10)
-	Uint64RawKind       = byte(11)
-	Int32RawKind        = byte(12)
-	Int64RawKind        = byte(13)
-	Float32RawKind      = byte(14)
-	Float64RawKind      = byte(15)
-	StaticUint32RawKind = byte(16)
+	NilRawKind     = byte(0)
+	SliceRawKind   = byte(1)
+	MapRawKind     = byte(2)
+	AnyRawKind     = byte(3)
+	BytesRawKind   = byte(4)
+	StringRawKind  = byte(5)
+	ErrorRawKind   = byte(6)
+	BoolRawKind    = byte(7)
+	Uint8RawKind   = byte(8)
+	Uint16RawKind  = byte(9)
+	Uint32RawKind  = byte(10)
+	Uint64RawKind  = byte(11)
+	Int32RawKind   = byte(12)
+	Int64RawKind   = byte(13)
+	Float32RawKind = byte(14)
+	Float64RawKind = byte(15)
 )
 
 type Kind byte
@@ -79,20 +78,19 @@ var (
 )
 
 const (
-	nilSize          = 1
-	mapSize          = 3 + staticUint32Size
-	sliceSize        = 2 + staticUint32Size
-	bytesSize        = 1 + staticUint32Size
-	stringSize       = 1 + staticUint32Size
-	errorSize        = 1 + stringSize
-	boolSize         = 2
-	uint8Size        = 2
-	uint16Size       = 1 + VarIntLen16
-	uint32Size       = 1 + VarIntLen32
-	staticUint32Size = 1 + 4
-	uint64Size       = 1 + VarIntLen64
-	float32Size      = 5
-	float64Size      = 9
+	nilSize     = 1
+	mapSize     = 3 + uint32Size
+	sliceSize   = 2 + uint32Size
+	bytesSize   = 1 + uint32Size
+	stringSize  = 1 + uint32Size
+	errorSize   = 1 + stringSize
+	boolSize    = 2
+	uint8Size   = 2
+	uint16Size  = 1 + VarIntLen16
+	uint32Size  = 1 + VarIntLen32
+	uint64Size  = 1 + VarIntLen64
+	float32Size = 5
+	float64Size = 9
 )
 
 func EncodeNil(b *Buffer) {
@@ -113,7 +111,7 @@ func RawEncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
 	b.WriteRawByte(MapRawKind)
 	b.WriteRawByte(byte(keyKind))
 	b.WriteRawByte(byte(valueKind))
-	RawStaticEncodeUint32(b, size)
+	RawEncodeUint32(b, size)
 }
 
 func EncodeSlice(b *Buffer, size uint32, kind Kind) {
@@ -124,7 +122,7 @@ func EncodeSlice(b *Buffer, size uint32, kind Kind) {
 func RawEncodeSlice(b *Buffer, size uint32, kind Kind) {
 	b.WriteRawByte(SliceRawKind)
 	b.WriteRawByte(byte(kind))
-	RawStaticEncodeUint32(b, size)
+	RawEncodeUint32(b, size)
 }
 
 func EncodeBytes(b *Buffer, value []byte) {
@@ -132,10 +130,9 @@ func EncodeBytes(b *Buffer, value []byte) {
 	RawEncodeBytes(b, value)
 }
 
-//gcassert:inline
 func RawEncodeBytes(b *Buffer, value []byte) {
 	b.WriteRawByte(BytesRawKind)
-	RawStaticEncodeUint32(b, uint32(len(value)))
+	RawEncodeUint32(b, uint32(len(value)))
 	b.WriteRaw(value)
 }
 
@@ -154,7 +151,7 @@ func RawEncodeString(b *Buffer, value string) {
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
 	b.WriteRawByte(StringRawKind)
-	RawStaticEncodeUint32(b, uint32(len(nb)))
+	RawEncodeUint32(b, uint32(len(nb)))
 	b.WriteRaw(nb)
 }
 
@@ -200,11 +197,24 @@ func EncodeUint16(b *Buffer, value uint16) {
 
 func RawEncodeUint16(b *Buffer, value uint16) {
 	b.WriteRawByte(Uint16RawKind)
-	for value >= continuation {
-		b.WriteRawByte(byte(value) | continuation)
+	if value < (1 << 7) {
+		b.WriteRawByte(byte(value))
+	} else {
+		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
 		value >>= 7
+		if value < (1 << 7) {
+			b.WriteRawByte(byte(value))
+		} else {
+			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			value >>= 7
+			if value < (1 << 7) {
+				b.WriteRawByte(byte(value))
+			} else {
+				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+				b.WriteRawByte(byte(value >> 7))
+			}
+		}
 	}
-	b.WriteRawByte(byte(value))
 }
 
 func EncodeUint32(b *Buffer, value uint32) {
@@ -214,22 +224,36 @@ func EncodeUint32(b *Buffer, value uint32) {
 
 func RawEncodeUint32(b *Buffer, value uint32) {
 	b.WriteRawByte(Uint32RawKind)
-	for value >= continuation {
-		b.WriteRawByte(byte(value) | continuation)
+	if value < (1 << 7) {
+		b.WriteRawByte(byte(value))
+	} else {
+		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
 		value >>= 7
+		if value < (1 << 7) {
+			b.WriteRawByte(byte(value))
+		} else {
+			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			value >>= 7
+			if value < (1 << 7) {
+				b.WriteRawByte(byte(value))
+			} else {
+				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+				value >>= 7
+				if value < (1 << 7) {
+					b.WriteRawByte(byte(value))
+				} else {
+					b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+					value >>= 7
+					if value < (1 << 7) {
+						b.WriteRawByte(byte(value))
+					} else {
+						b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+						b.WriteRawByte(byte(value >> 7))
+					}
+				}
+			}
+		}
 	}
-	b.WriteRawByte(byte(value))
-}
-
-//gcassert:inline
-func RawStaticEncodeUint32(b *Buffer, value uint32) {
-	b.WriteRawByte(StaticUint32RawKind)
-	b.WriteRawByte(byte(value >> 24))
-	b.WriteRawByte(byte(value >> 16))
-	b.b[b.offset] = byte(value >> 8)
-	b.offset++
-	b.b[b.offset] = byte(value)
-	b.offset++
 }
 
 func EncodeUint64(b *Buffer, value uint64) {
@@ -239,11 +263,60 @@ func EncodeUint64(b *Buffer, value uint64) {
 
 func RawEncodeUint64(b *Buffer, value uint64) {
 	b.WriteRawByte(Uint64RawKind)
-	for value >= continuation {
-		b.WriteRawByte(byte(value) | continuation)
+	if value < (1 << 7) {
+		b.WriteRawByte(byte(value))
+	} else {
+		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
 		value >>= 7
+		if value < (1 << 7) {
+			b.WriteRawByte(byte(value))
+		} else {
+			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			value >>= 7
+			if value < (1 << 7) {
+				b.WriteRawByte(byte(value))
+			} else {
+				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+				value >>= 7
+				if value < (1 << 7) {
+					b.WriteRawByte(byte(value))
+				} else {
+					b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+					value >>= 7
+					if value < (1 << 7) {
+						b.WriteRawByte(byte(value))
+					} else {
+						b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+						value >>= 7
+						if value < (1 << 7) {
+							b.WriteRawByte(byte(value))
+						} else {
+							b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+							value >>= 7
+							if value < (1 << 7) {
+								b.WriteRawByte(byte(value))
+							} else {
+								b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+								value >>= 7
+								if value < (1 << 7) {
+									b.WriteRawByte(byte(value))
+								} else {
+									b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+									value >>= 7
+									if value < (1 << 7) {
+										b.WriteRawByte(byte(value))
+									} else {
+										b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+										b.WriteRawByte(byte(value >> 7))
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	b.WriteRawByte(byte(value))
 }
 
 func EncodeInt32(b *Buffer, value int32) {
@@ -252,16 +325,41 @@ func EncodeInt32(b *Buffer, value int32) {
 }
 
 func RawEncodeInt32(b *Buffer, value int32) {
-	b.WriteRawByte(Int32RawKind)
 	castValue := uint32(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
-	for castValue >= continuation {
-		b.WriteRawByte(byte(castValue) | continuation)
+	b.WriteRawByte(Int32RawKind)
+	if castValue < (1 << 7) {
+		b.WriteRawByte(byte(castValue))
+	} else {
+		b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
 		castValue >>= 7
+		if castValue < (1 << 7) {
+			b.WriteRawByte(byte(castValue))
+		} else {
+			b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+			castValue >>= 7
+			if castValue < (1 << 7) {
+				b.WriteRawByte(byte(castValue))
+			} else {
+				b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+				castValue >>= 7
+				if castValue < (1 << 7) {
+					b.WriteRawByte(byte(castValue))
+				} else {
+					b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+					castValue >>= 7
+					if castValue < (1 << 7) {
+						b.WriteRawByte(byte(castValue))
+					} else {
+						b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+						b.WriteRawByte(byte(castValue >> 7))
+					}
+				}
+			}
+		}
 	}
-	b.WriteRawByte(byte(castValue))
 }
 
 func EncodeInt64(b *Buffer, value int64) {
@@ -270,16 +368,65 @@ func EncodeInt64(b *Buffer, value int64) {
 }
 
 func RawEncodeInt64(b *Buffer, value int64) {
-	b.WriteRawByte(Int64RawKind)
 	castValue := uint64(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
-	for castValue >= continuation {
-		b.WriteRawByte(byte(castValue) | continuation)
+	b.WriteRawByte(Int64RawKind)
+	if castValue < (1 << 7) {
+		b.WriteRawByte(byte(castValue))
+	} else {
+		b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
 		castValue >>= 7
+		if castValue < (1 << 7) {
+			b.WriteRawByte(byte(castValue))
+		} else {
+			b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+			castValue >>= 7
+			if castValue < (1 << 7) {
+				b.WriteRawByte(byte(castValue))
+			} else {
+				b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+				castValue >>= 7
+				if castValue < (1 << 7) {
+					b.WriteRawByte(byte(castValue))
+				} else {
+					b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+					castValue >>= 7
+					if castValue < (1 << 7) {
+						b.WriteRawByte(byte(castValue))
+					} else {
+						b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+						castValue >>= 7
+						if castValue < (1 << 7) {
+							b.WriteRawByte(byte(castValue))
+						} else {
+							b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+							castValue >>= 7
+							if castValue < (1 << 7) {
+								b.WriteRawByte(byte(castValue))
+							} else {
+								b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+								castValue >>= 7
+								if castValue < (1 << 7) {
+									b.WriteRawByte(byte(castValue))
+								} else {
+									b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+									castValue >>= 7
+									if castValue < (1 << 7) {
+										b.WriteRawByte(byte(castValue))
+									} else {
+										b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+										b.WriteRawByte(byte(castValue >> 7))
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	b.WriteRawByte(byte(castValue))
 }
 
 func EncodeFloat32(b *Buffer, value float32) {
