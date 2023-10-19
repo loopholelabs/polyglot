@@ -19,8 +19,6 @@ package polyglot
 import (
 	"errors"
 	"math"
-
-	"github.com/segmentio/asm/mem"
 )
 
 const (
@@ -99,12 +97,12 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 			if len(ret) < int(size) {
 				if ret == nil {
 					ret = make([]byte, size)
-					mem.Copy(ret, b[:size])
+					copy(ret, b[:size])
 				} else {
 					ret = append(ret[:0], b[:size]...)
 				}
 			} else {
-				mem.Copy(ret[0:], b[:size])
+				copy(ret[0:], b[:size])
 			}
 			return b[size:], ret, nil
 		}
@@ -191,22 +189,58 @@ func decodeUint16(b []byte) ([]byte, uint16, error) {
 
 func decodeUint32(b []byte) ([]byte, uint32, error) {
 	if len(b) > 1 && b[0] == Uint32RawKind {
-		var x uint32
-		var s uint
-		for i := 1; i < VarIntLen32+1; i++ {
-			cb := b[i]
-			// Check if msb is set signifying a continuation byte
-			if cb < continuation {
-				if i > VarIntLen32 && cb > 1 {
-					return b, 0, InvalidUint32
-				}
-				// End of varint, add the last bits and advance the buffer
-				return b[i+1:], x | uint32(cb)<<s, nil
-			}
-			// Add the lower 7 bits to the result and continue to the next byte
-			x |= uint32(cb&(continuation-1)) << s
-			s += 7
+		cb := uint32(b[1])
+		if cb < continuation {
+			return b[2:], cb, nil
 		}
+
+		x := cb & (continuation - 1)
+		cb = uint32(b[2])
+		if cb < continuation {
+			return b[3:], x | (cb << 7), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 7
+		cb = uint32(b[3])
+		if cb < continuation {
+			return b[4:], x | (cb << 14), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 14
+		cb = uint32(b[4])
+		if cb < continuation {
+			return b[5:], x | (cb << 21), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 21
+		cb = uint32(b[5])
+		if cb < continuation {
+			return b[6:], x | (cb << 28), nil
+		}
+
+		//count += more
+		//cb = uint32(b[6])
+		//x |= more * ((cb & (continuation - 1)) << 35)
+		//more &= (cb & continuation) >> 7
+
+		//return b, 0, InvalidUint32
+		//
+		//var x uint32
+		//var s uint
+		//for i := 1; i < VarIntLen32+1; i++ {
+		//	cb := _b[i]
+		//	// Check if msb is set signifying a continuation byte
+		//	if cb < continuation {
+		//		if i > VarIntLen32 && cb > 1 {
+		//			return _b, 0, InvalidUint32
+		//		}
+		//		// End of varint, add the last bits and advance the buffer
+		//		return _b[i+1:], x | uint32(cb)<<s, nil
+		//	}
+		//	// Add the lower 7 bits to the result and continue to the next byte
+		//	x |= uint32(cb&(continuation-1)) << s
+		//	s += 7
+		//}
 	}
 	return b, 0, InvalidUint32
 }
@@ -243,27 +277,53 @@ func decodeUint64(b []byte) ([]byte, uint64, error) {
 
 func decodeInt32(b []byte) ([]byte, int32, error) {
 	if len(b) > 1 && b[0] == Int32RawKind {
-		var ux uint32
-		var s uint
-		for i := 1; i < VarIntLen32+1; i++ {
-			cb := b[i]
-			// Check if msb is set signifying a continuation byte
-			if cb < continuation {
-				if i > VarIntLen32 && cb > 1 {
-					return b, 0, InvalidInt32
-				}
-				// End of varint, add the last bits
-				ux |= uint32(cb) << s
-				// Separate value and sign
-				x := int32(ux >> 1)
-				// If sign bit is set, negate the number
-				if ux&1 != 0 {
-					x = -(x + 1)
-				}
-				return b[i+1:], x, nil
+		cb := uint32(b[1])
+		if cb < continuation {
+			x := int32(cb >> 1)
+			if cb&1 != 0 {
+				x = -(x + 1)
 			}
-			ux |= uint32(cb&(continuation-1)) << s
-			s += 7
+			return b[2:], x, nil
+		}
+
+		x := cb & (continuation - 1)
+		cb = uint32(b[2])
+		if cb < continuation {
+			x |= cb << 7
+			if x&1 != 0 {
+				return b[3:], -(int32(x>>1) + 1), nil
+			}
+			return b[3:], int32(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 7
+		cb = uint32(b[3])
+		if cb < continuation {
+			x |= cb << 14
+			if x&1 != 0 {
+				return b[4:], -(int32(x>>1) + 1), nil
+			}
+			return b[4:], int32(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 14
+		cb = uint32(b[4])
+		if cb < continuation {
+			x |= cb << 21
+			if x&1 != 0 {
+				return b[5:], -(int32(x>>1) + 1), nil
+			}
+			return b[5:], int32(x >> 1), nil
+		}
+
+		x |= (cb & (continuation - 1)) << 21
+		cb = uint32(b[5])
+		if cb < continuation {
+			x |= cb << 28
+			if x&1 != 0 {
+				return b[6:], -(int32(x>>1) + 1), nil
+			}
+			return b[6:], int32(x >> 1), nil
 		}
 	}
 	return b, 0, InvalidInt32
