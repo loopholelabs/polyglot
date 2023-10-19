@@ -45,6 +45,14 @@ func (buf *Buffer) WriteRawByte(b byte) {
 	buf.offset++
 }
 
+func (buf *Buffer) WriteRawByteDirect(b byte, offset int) {
+	buf.b[buf.offset+offset] = b
+}
+
+func (buf *Buffer) AddOffset(offset int) {
+	buf.offset += offset
+}
+
 func (buf *Buffer) Write(b []byte) int {
 	buf.Grow(len(b))
 	buf.offset += copy(buf.b[buf.offset:], b)

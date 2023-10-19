@@ -108,9 +108,10 @@ func EncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
 }
 
 func RawEncodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.WriteRawByte(MapRawKind)
-	b.WriteRawByte(byte(keyKind))
-	b.WriteRawByte(byte(valueKind))
+	b.WriteRawByteDirect(MapRawKind, 0)
+	b.WriteRawByteDirect(byte(keyKind), 1)
+	b.WriteRawByteDirect(byte(valueKind), 2)
+	b.AddOffset(3)
 	RawEncodeUint32(b, size)
 }
 
@@ -223,32 +224,38 @@ func EncodeUint32(b *Buffer, value uint32) {
 }
 
 func RawEncodeUint32(b *Buffer, value uint32) {
-	b.WriteRawByte(Uint32RawKind)
+	b.WriteRawByteDirect(Uint32RawKind, 0)
 	if value < (1 << 7) {
-		b.WriteRawByte(byte(value))
+		b.WriteRawByteDirect(byte(value), 1)
+		b.AddOffset(2)
 	} else {
-		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+		b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 1)
 		value >>= 7
 		if value < (1 << 7) {
-			b.WriteRawByte(byte(value))
+			b.WriteRawByteDirect(byte(value), 2)
+			b.AddOffset(3)
 		} else {
-			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 2)
 			value >>= 7
 			if value < (1 << 7) {
-				b.WriteRawByte(byte(value))
+				b.WriteRawByteDirect(byte(value), 3)
+				b.AddOffset(4)
 			} else {
-				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+				b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 3)
 				value >>= 7
 				if value < (1 << 7) {
-					b.WriteRawByte(byte(value))
+					b.WriteRawByteDirect(byte(value), 4)
+					b.AddOffset(5)
 				} else {
-					b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+					b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 4)
 					value >>= 7
 					if value < (1 << 7) {
-						b.WriteRawByte(byte(value))
+						b.WriteRawByteDirect(byte(value), 5)
+						b.AddOffset(6)
 					} else {
-						b.WriteRawByte(byte(value&(continuation-1)) | continuation)
-						b.WriteRawByte(byte(value >> 7))
+						b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 5)
+						b.WriteRawByteDirect(byte(value>>7), 6)
+						b.AddOffset(7)
 					}
 				}
 			}
@@ -262,52 +269,62 @@ func EncodeUint64(b *Buffer, value uint64) {
 }
 
 func RawEncodeUint64(b *Buffer, value uint64) {
-	b.WriteRawByte(Uint64RawKind)
+	b.WriteRawByteDirect(Uint64RawKind, 0)
 	if value < (1 << 7) {
-		b.WriteRawByte(byte(value))
+		b.WriteRawByteDirect(byte(value), 1)
+		b.AddOffset(2)
 	} else {
-		b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+		b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 1)
 		value >>= 7
 		if value < (1 << 7) {
-			b.WriteRawByte(byte(value))
+			b.WriteRawByteDirect(byte(value), 2)
+			b.AddOffset(3)
 		} else {
-			b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+			b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 2)
 			value >>= 7
 			if value < (1 << 7) {
-				b.WriteRawByte(byte(value))
+				b.WriteRawByteDirect(byte(value), 3)
+				b.AddOffset(4)
 			} else {
-				b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+				b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 3)
 				value >>= 7
 				if value < (1 << 7) {
-					b.WriteRawByte(byte(value))
+					b.WriteRawByteDirect(byte(value), 4)
+					b.AddOffset(5)
 				} else {
-					b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+					b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 4)
 					value >>= 7
 					if value < (1 << 7) {
-						b.WriteRawByte(byte(value))
+						b.WriteRawByteDirect(byte(value), 5)
+						b.AddOffset(6)
 					} else {
-						b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+						b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 5)
 						value >>= 7
 						if value < (1 << 7) {
-							b.WriteRawByte(byte(value))
+							b.WriteRawByteDirect(byte(value), 6)
+							b.AddOffset(7)
 						} else {
-							b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+							b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 6)
 							value >>= 7
 							if value < (1 << 7) {
-								b.WriteRawByte(byte(value))
+								b.WriteRawByteDirect(byte(value), 7)
+								b.AddOffset(8)
 							} else {
-								b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+								b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 7)
 								value >>= 7
 								if value < (1 << 7) {
-									b.WriteRawByte(byte(value))
+									b.WriteRawByteDirect(byte(value), 8)
+									b.AddOffset(9)
 								} else {
-									b.WriteRawByte(byte(value&(continuation-1)) | continuation)
+									b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 8)
 									value >>= 7
 									if value < (1 << 7) {
-										b.WriteRawByte(byte(value))
+										b.WriteRawByteDirect(byte(value), 9)
+										b.AddOffset(10)
 									} else {
-										b.WriteRawByte(byte(value&(continuation-1)) | continuation)
-										b.WriteRawByte(byte(value >> 7))
+										b.WriteRawByteDirect(byte(value&(continuation-1))|continuation, 9)
+										b.WriteRawByteDirect(byte(value>>7), 10)
+										b.AddOffset(11)
 									}
 								}
 							}
@@ -329,32 +346,38 @@ func RawEncodeInt32(b *Buffer, value int32) {
 	if value < 0 {
 		castValue = ^castValue
 	}
-	b.WriteRawByte(Int32RawKind)
+	b.WriteRawByteDirect(Int32RawKind, 0)
 	if castValue < (1 << 7) {
-		b.WriteRawByte(byte(castValue))
+		b.WriteRawByteDirect(byte(castValue), 1)
+		b.AddOffset(2)
 	} else {
-		b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+		b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 1)
 		castValue >>= 7
 		if castValue < (1 << 7) {
-			b.WriteRawByte(byte(castValue))
+			b.WriteRawByteDirect(byte(castValue), 2)
+			b.AddOffset(3)
 		} else {
-			b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+			b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 2)
 			castValue >>= 7
 			if castValue < (1 << 7) {
-				b.WriteRawByte(byte(castValue))
+				b.WriteRawByteDirect(byte(castValue), 3)
+				b.AddOffset(4)
 			} else {
-				b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+				b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 3)
 				castValue >>= 7
 				if castValue < (1 << 7) {
-					b.WriteRawByte(byte(castValue))
+					b.WriteRawByteDirect(byte(castValue), 4)
+					b.AddOffset(5)
 				} else {
-					b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+					b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 4)
 					castValue >>= 7
 					if castValue < (1 << 7) {
-						b.WriteRawByte(byte(castValue))
+						b.WriteRawByteDirect(byte(castValue), 5)
+						b.AddOffset(6)
 					} else {
-						b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
-						b.WriteRawByte(byte(castValue >> 7))
+						b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 5)
+						b.WriteRawByteDirect(byte(castValue>>7), 6)
+						b.AddOffset(7)
 					}
 				}
 			}
@@ -372,52 +395,62 @@ func RawEncodeInt64(b *Buffer, value int64) {
 	if value < 0 {
 		castValue = ^castValue
 	}
-	b.WriteRawByte(Int64RawKind)
+	b.WriteRawByteDirect(Int64RawKind, 0)
 	if castValue < (1 << 7) {
-		b.WriteRawByte(byte(castValue))
+		b.WriteRawByteDirect(byte(castValue), 1)
+		b.AddOffset(2)
 	} else {
-		b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+		b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 1)
 		castValue >>= 7
 		if castValue < (1 << 7) {
-			b.WriteRawByte(byte(castValue))
+			b.WriteRawByteDirect(byte(castValue), 2)
+			b.AddOffset(3)
 		} else {
-			b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+			b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 2)
 			castValue >>= 7
 			if castValue < (1 << 7) {
-				b.WriteRawByte(byte(castValue))
+				b.WriteRawByteDirect(byte(castValue), 3)
+				b.AddOffset(4)
 			} else {
-				b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+				b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 3)
 				castValue >>= 7
 				if castValue < (1 << 7) {
-					b.WriteRawByte(byte(castValue))
+					b.WriteRawByteDirect(byte(castValue), 4)
+					b.AddOffset(5)
 				} else {
-					b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+					b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 4)
 					castValue >>= 7
 					if castValue < (1 << 7) {
-						b.WriteRawByte(byte(castValue))
+						b.WriteRawByteDirect(byte(castValue), 5)
+						b.AddOffset(6)
 					} else {
-						b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+						b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 5)
 						castValue >>= 7
 						if castValue < (1 << 7) {
-							b.WriteRawByte(byte(castValue))
+							b.WriteRawByteDirect(byte(castValue), 6)
+							b.AddOffset(7)
 						} else {
-							b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+							b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 6)
 							castValue >>= 7
 							if castValue < (1 << 7) {
-								b.WriteRawByte(byte(castValue))
+								b.WriteRawByteDirect(byte(castValue), 7)
+								b.AddOffset(8)
 							} else {
-								b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+								b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 7)
 								castValue >>= 7
 								if castValue < (1 << 7) {
-									b.WriteRawByte(byte(castValue))
+									b.WriteRawByteDirect(byte(castValue), 8)
+									b.AddOffset(9)
 								} else {
-									b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
+									b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 8)
 									castValue >>= 7
 									if castValue < (1 << 7) {
-										b.WriteRawByte(byte(castValue))
+										b.WriteRawByteDirect(byte(castValue), 9)
+										b.AddOffset(10)
 									} else {
-										b.WriteRawByte(byte(castValue&(continuation-1)) | continuation)
-										b.WriteRawByte(byte(castValue >> 7))
+										b.WriteRawByteDirect(byte(castValue&(continuation-1))|continuation, 9)
+										b.WriteRawByteDirect(byte(castValue>>7), 10)
+										b.AddOffset(11)
 									}
 								}
 							}
