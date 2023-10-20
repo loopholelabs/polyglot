@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changes
+
+- Significant performance improvements for the Golang implementation 
+
 ## [v1.1.4] - 2023-10-12
 
 ### Fixes
