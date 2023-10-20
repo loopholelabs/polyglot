@@ -23,76 +23,76 @@ func Encoder(b *Buffer) *BufferEncoder {
 }
 
 func (e *BufferEncoder) Nil() *BufferEncoder {
-	EncodeNil((*Buffer)(e))
+	encodeNil((*Buffer)(e))
 	return e
 }
 
 func (e *BufferEncoder) Map(size uint32, keyKind, valueKind Kind) *BufferEncoder {
-	EncodeMap((*Buffer)(e), size, keyKind, valueKind)
+	encodeMap((*Buffer)(e), size, keyKind, valueKind)
 	return e
 }
 
 func (e *BufferEncoder) Slice(size uint32, kind Kind) *BufferEncoder {
-	EncodeSlice((*Buffer)(e), size, kind)
+	encodeSlice((*Buffer)(e), size, kind)
 	return e
 }
 
 func (e *BufferEncoder) Bytes(value []byte) *BufferEncoder {
-	EncodeBytes((*Buffer)(e), value)
+	encodeBytes((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) String(value string) *BufferEncoder {
-	EncodeString((*Buffer)(e), value)
+	encodeString((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Error(value error) *BufferEncoder {
-	EncodeError((*Buffer)(e), value)
+	encodeError((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Bool(value bool) *BufferEncoder {
-	EncodeBool((*Buffer)(e), value)
+	encodeBool((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Uint8(value uint8) *BufferEncoder {
-	EncodeUint8((*Buffer)(e), value)
+	encodeUint8((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Uint16(value uint16) *BufferEncoder {
-	EncodeUint16((*Buffer)(e), value)
+	encodeUint16((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Uint32(value uint32) *BufferEncoder {
-	EncodeUint32((*Buffer)(e), value)
+	encodeUint32((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Uint64(value uint64) *BufferEncoder {
-	EncodeUint64((*Buffer)(e), value)
+	encodeUint64((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Int32(value int32) *BufferEncoder {
-	EncodeInt32((*Buffer)(e), value)
+	encodeInt32((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Int64(value int64) *BufferEncoder {
-	EncodeInt64((*Buffer)(e), value)
+	encodeInt64((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Float32(value float32) *BufferEncoder {
-	EncodeFloat32((*Buffer)(e), value)
+	encodeFloat32((*Buffer)(e), value)
 	return e
 }
 
 func (e *BufferEncoder) Float64(value float64) *BufferEncoder {
-	EncodeFloat64((*Buffer)(e), value)
+	encodeFloat64((*Buffer)(e), value)
 	return e
 }
