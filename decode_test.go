@@ -208,7 +208,7 @@ func TestDecodeError(t *testing.T) {
 	t.Parallel()
 
 	p := NewBuffer()
-	v := errors.New("Test Error")
+	v := errors.New("test error")
 	EncodeError(p, v)
 
 	var value error

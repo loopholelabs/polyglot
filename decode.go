@@ -47,46 +47,40 @@ var (
 )
 
 func decodeNil(b []byte) ([]byte, bool) {
-	if len(b) > 0 {
-		if b[0] == NilRawKind {
-			return b[1:], true
-		}
+	if len(b) > 0 && b[0] == NilRawKind {
+		return b[1:], true
 	}
 	return b, false
 }
 
 func decodeMap(b []byte, keyKind, valueKind Kind) ([]byte, uint32, error) {
-	if len(b) > 2 {
-		if b[0] == MapRawKind && b[1] == byte(keyKind) && b[2] == byte(valueKind) {
-			var size uint32
-			var err error
-			b, size, err = decodeUint32(b[3:])
-			if err != nil {
-				return b, 0, InvalidMap
-			}
-			return b, size, nil
+	if len(b) > 3 && b[0] == MapRawKind && b[1] == byte(keyKind) && b[2] == byte(valueKind) {
+		var size uint32
+		var err error
+		b, size, err = decodeUint32(b[3:])
+		if err != nil {
+			return b, 0, InvalidMap
 		}
+		return b, size, nil
 	}
 	return b, 0, InvalidMap
 }
 
 func decodeSlice(b []byte, kind Kind) ([]byte, uint32, error) {
-	if len(b) > 1 {
-		if b[0] == SliceRawKind && b[1] == byte(kind) {
-			var size uint32
-			var err error
-			b, size, err = decodeUint32(b[2:])
-			if err != nil {
-				return b, 0, InvalidSlice
-			}
-			return b, size, nil
+	if len(b) > 2 && b[0] == SliceRawKind && b[1] == byte(kind) {
+		var size uint32
+		var err error
+		b, size, err = decodeUint32(b[2:])
+		if err != nil {
+			return b, 0, InvalidSlice
 		}
+		return b, size, nil
 	}
 	return b, 0, InvalidSlice
 }
 
 func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
-	if len(b) > 3 && b[0] == BytesRawKind && b[1] == Uint32RawKind {
+	if len(b) > 2 && b[0] == BytesRawKind && b[1] == Uint32RawKind {
 		var size int
 		var offset int
 		cb := uint32(b[2])
@@ -130,55 +124,48 @@ func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
 }
 
 func decodeString(b []byte) ([]byte, string, error) {
-	if len(b) > 0 {
-		if b[0] == StringRawKind {
-			var size uint32
-			var err error
-			b, size, err = decodeUint32(b[1:])
-			if err != nil {
-				return b, emptyString, InvalidString
-			}
-			if len(b) > int(size)-1 {
-				return b[size:], string(b[:size]), nil
-			}
+	if len(b) > 1 && b[0] == StringRawKind {
+		var size uint32
+		var err error
+		b, size, err = decodeUint32(b[1:])
+		if err != nil {
+			return b, emptyString, InvalidString
+		}
+		if len(b) > int(size)-1 {
+			return b[size:], string(b[:size]), nil
 		}
 	}
 	return b, emptyString, InvalidString
 }
 
 func decodeError(b []byte) ([]byte, error, error) {
-	if len(b) > 0 {
-		if b[0] == ErrorRawKind {
-			var val string
-			var err error
-			b, val, err = decodeString(b[1:])
-			if err != nil {
-				return b, nil, InvalidError
-			}
-			return b, Error(val), nil
+	if len(b) > 1 && b[0] == ErrorRawKind {
+		var val string
+		var err error
+		b, val, err = decodeString(b[1:])
+		if err != nil {
+			return b, nil, InvalidError
 		}
+		return b, Error(val), nil
 	}
 	return b, nil, InvalidError
 }
 
 func decodeBool(b []byte) ([]byte, bool, error) {
-	if len(b) > 1 {
-		if b[0] == BoolRawKind {
-			if b[1] == trueBool {
-				return b[2:], true, nil
-			} else {
-				return b[2:], false, nil
-			}
+	if len(b) > 1 && b[0] == BoolRawKind {
+		switch b[1] {
+		case trueBool:
+			return b[2:], true, nil
+		case falseBool:
+			return b[2:], false, nil
 		}
 	}
 	return b, false, InvalidBool
 }
 
 func decodeUint8(b []byte) ([]byte, uint8, error) {
-	if len(b) > 1 {
-		if b[0] == Uint8RawKind {
-			return b[2:], b[1], nil
-		}
+	if len(b) > 1 && b[0] == Uint8RawKind {
+		return b[2:], b[1], nil
 	}
 	return b, 0, InvalidUint8
 }
