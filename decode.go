@@ -86,25 +86,44 @@ func decodeSlice(b []byte, kind Kind) ([]byte, uint32, error) {
 }
 
 func decodeBytes(b []byte, ret []byte) ([]byte, []byte, error) {
-	if len(b) > 0 && b[0] == BytesRawKind {
-		var size uint32
-		var err error
-		b, size, err = decodeUint32(b[1:])
-		if err != nil {
-			return b, nil, InvalidBytes
-		}
-		if len(b) > int(size)-1 {
-			if len(ret) < int(size) {
-				if ret == nil {
-					ret = make([]byte, size)
-					copy(ret, b[:size])
-				} else {
-					ret = append(ret[:0], b[:size]...)
-				}
+	if len(b) > 3 && b[0] == BytesRawKind && b[1] == Uint32RawKind {
+		var size int
+		var offset int
+		cb := uint32(b[2])
+		if cb < continuation {
+			size = int(cb)
+			offset = 3
+		} else {
+			x := cb & (continuation - 1)
+			cb = uint32(b[3])
+			if cb < continuation {
+				size = int(x | (cb << 7))
+				offset = 4
 			} else {
-				copy(ret[0:], b[:size])
+				x |= (cb & (continuation - 1)) << 7
+				cb = uint32(b[4])
+				if cb < continuation {
+					size = int(x | (cb << 14))
+					offset = 5
+				} else {
+					x |= (cb & (continuation - 1)) << 14
+					cb = uint32(b[5])
+					if cb < continuation {
+						size = int(x | (cb << 21))
+						offset = 6
+					} else {
+						x |= (cb & (continuation - 1)) << 21
+						cb = uint32(b[6])
+						if cb < continuation {
+							size = int(x | (cb << 28))
+							offset = 7
+						}
+					}
+				}
 			}
-			return b[size:], ret, nil
+		}
+		if len(b)-offset > size-1 {
+			return b[size+offset:], append(ret[:0], b[offset:size+offset]...), nil
 		}
 	}
 	return b, nil, InvalidBytes

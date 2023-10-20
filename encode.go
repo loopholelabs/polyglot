@@ -139,10 +139,53 @@ func EncodeBytes(b *Buffer, value []byte) {
 }
 
 func RawEncodeBytes(b *Buffer, value []byte) {
-	b.b[b.offset] = BytesRawKind
-	b.offset++
-	RawEncodeUint32(b, uint32(len(value)))
-	b.offset += copy(b.b[b.offset:], value)
+	castValue := uint32(len(value))
+	offset := b.offset
+	b.b[offset] = BytesRawKind
+	offset++
+	b.b[offset] = Uint32RawKind
+	offset++
+	if castValue < continuation {
+		b.b[offset] = byte(castValue)
+		offset++
+	} else {
+		b.b[offset] = byte(castValue&(continuation-1)) | continuation
+		offset++
+		castValue >>= 7
+		if castValue < continuation {
+			b.b[offset] = byte(castValue)
+			offset++
+		} else {
+			b.b[offset] = byte(castValue&(continuation-1)) | continuation
+			offset++
+			castValue >>= 7
+			if castValue < continuation {
+				b.b[offset] = byte(castValue)
+				offset++
+			} else {
+				b.b[offset] = byte(castValue&(continuation-1)) | continuation
+				offset++
+				castValue >>= 7
+				if castValue < continuation {
+					b.b[offset] = byte(castValue)
+					offset++
+				} else {
+					b.b[offset] = byte(castValue&(continuation-1)) | continuation
+					offset++
+					castValue >>= 7
+					if castValue < continuation {
+						b.b[offset] = byte(castValue)
+					} else {
+						b.b[offset] = byte(castValue&(continuation-1)) | continuation
+						offset++
+						b.b[offset] = byte(castValue >> 7)
+						offset++
+					}
+				}
+			}
+		}
+	}
+	b.offset = offset + copy(b.b[offset:], value)
 }
 
 func EncodeString(b *Buffer, value string) {

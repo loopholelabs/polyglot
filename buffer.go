@@ -32,6 +32,13 @@ func NewBuffer() *Buffer {
 	}
 }
 
+func NewBufferSize(size int) *Buffer {
+	return &Buffer{
+		b:      make([]byte, size),
+		offset: 0,
+	}
+}
+
 func (buf *Buffer) Reset() {
 	buf.offset = 0
 }
