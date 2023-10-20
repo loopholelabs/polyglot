@@ -16,3 +16,4 @@ jobs:
           cache: true
       - name: Run Benchmarks
         run: make benchmark
+        working-directory: benchmarks/vtproto
