@@ -39,8 +39,19 @@ func NewBufferSize(size int) *Buffer {
 	}
 }
 
+func NewBufferFromBytes(b []byte) *Buffer {
+	return &Buffer{
+		b:      b,
+		offset: 0,
+	}
+}
+
 func (buf *Buffer) Reset() {
 	buf.offset = 0
+}
+
+func (buf *Buffer) MoveOffset(offset int) {
+	buf.offset += offset
 }
 
 func (buf *Buffer) grow(n int) {
