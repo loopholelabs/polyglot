@@ -17,10 +17,9 @@
 package polyglot
 
 import (
-	"math/rand"
-	"testing"
-
+	"crypto/rand"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestRecycle(t *testing.T) {
@@ -36,26 +35,26 @@ func TestRecycle(t *testing.T) {
 	pool.Put(b)
 	b = pool.Get()
 
-	testData := make([]byte, cap(*b)*2)
+	testData := make([]byte, b.Cap()*2)
 	_, err = rand.Read(testData)
 	assert.NoError(t, err)
 
 	for {
-		assert.Equal(t, Buffer([]byte{}), *b)
-		assert.Equal(t, 0, len(*b))
+		assert.Equal(t, NewBuffer().Bytes(), b.Bytes())
+		assert.Equal(t, 0, b.Len())
 
 		b.Write(testData)
-		assert.Equal(t, len(testData), len(*b))
-		assert.GreaterOrEqual(t, cap(*b), len(testData))
+		assert.Equal(t, len(testData), b.Len())
+		assert.GreaterOrEqual(t, b.Cap(), len(testData))
 
 		pool.Put(b)
 		b = pool.Get()
 
-		if cap(*b) < len(testData) {
+		if b.Cap() < len(testData) {
 			continue
 		}
-		assert.Equal(t, 0, len(*b))
-		assert.GreaterOrEqual(t, cap(*b), len(testData))
+		assert.Equal(t, 0, b.Len())
+		assert.GreaterOrEqual(t, b.Cap(), len(testData))
 		break
 	}
 
