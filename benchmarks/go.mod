@@ -2,7 +2,7 @@ module benchmark
 
 go 1.20
 
-replace github.com/loopholelabs/polyglot => ../../
+replace github.com/loopholelabs/polyglot => ../
 
 require (
 	github.com/loopholelabs/polyglot v1.1.3
