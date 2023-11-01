@@ -252,7 +252,7 @@ func BenchmarkDecodeVTProto(b *testing.B) {
 
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			vtData.Reset()
+			vtData.Bytes = nil
 			err = vtData.UnmarshalVT(vtBuf)
 			if err != nil {
 				b.Fatal(err)

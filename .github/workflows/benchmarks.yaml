@@ -15,5 +15,5 @@ jobs:
           check-latest: true
           cache: true
       - name: Run Benchmarks
-        run: make benchmark
-        working-directory: benchmarks/vtproto
+        run: make benchmark-polyglot
+        working-directory: benchmarks
