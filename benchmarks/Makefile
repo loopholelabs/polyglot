@@ -25,11 +25,13 @@ benchmark-polyglot-long:
 	- go mod tidy
 	- rm -rf bench.txt
 
-benchmark-vtproto:
-	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... -tags=vtproto -test.short | tee bench.txt
+benchmark-vtproto: benchmark-vtproto-cmp
 	- go run -mod=mod golang.org/x/perf/cmd/benchstat bench.txt
 	- go mod tidy
 	- rm -rf bench.txt
+
+benchmark-vtproto-cmp:
+	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... -tags=vtproto -test.short | tee bench.txt
 
 benchmark-vtproto-long:
 	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... -tags=vtproto | tee bench.txt
