@@ -11,11 +11,13 @@ generate:
 	- mkdir -p vtproto
 	- protoc --go_out=vtproto --go-vtproto_out=vtproto bench.proto
 
-benchmark-polyglot:
-	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... -test.short | tee bench.txt
+benchmark-polyglot: benchmark-polyglot-cmp
 	- go run -mod=mod golang.org/x/perf/cmd/benchstat bench.txt
 	- go mod tidy
 	- rm -rf bench.txt
+
+benchmark-polyglot-cmp:
+	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... -test.short | tee bench.txt
 
 benchmark-polyglot-long:
 	- go test -bench=. -timeout=24h -count=$(BENCHCOUNT) ./... | tee bench.txt
