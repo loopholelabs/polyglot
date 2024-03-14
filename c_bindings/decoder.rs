@@ -17,11 +17,11 @@
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 use crate::types;
-use types::{Kind, Status, Buffer};
+use types::{Buffer, Kind, Status};
 
+use polyglot_rs::Decoder as PolyglotDecoder;
 use std::ffi::{c_char, CString};
 use std::io::Cursor;
-use polyglot_rs::{Decoder as PolyglotDecoder};
 
 #[repr(C)]
 #[derive(Debug)]
@@ -30,7 +30,11 @@ pub struct Decoder {
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_new_decoder(status: *mut Status, buffer_pointer: *mut u8, buffer_size: u32) -> *mut Decoder {
+pub extern "C" fn polyglot_new_decoder(
+    status: *mut Status,
+    buffer_pointer: *mut u8,
+    buffer_size: u32,
+) -> *mut Decoder {
     Status::check_not_null(status);
 
     if buffer_pointer.is_null() {
@@ -68,27 +72,30 @@ pub extern "C" fn polyglot_decode_none(status: *mut Status, decoder: *mut Decode
         }
     }
 
-    unsafe {
-        (*decoder).cursor.decode_none()
-    }
+    unsafe { (*decoder).cursor.decode_none() }
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_decode_array(status: *mut Status, decoder: *mut Decoder, array_kind: Kind) -> u32 {
+pub extern "C" fn polyglot_decode_array(
+    status: *mut Status,
+    decoder: *mut Decoder,
+    array_kind: Kind,
+) -> u32 {
     Status::check_not_null(status);
 
     if decoder.is_null() {
         unsafe {
             *status = Status::NullPointer;
         }
+        return 0;
     }
 
     unsafe {
         match (*decoder).cursor.decode_array(array_kind.into()) {
-            Ok(size ) => {
+            Ok(size) => {
                 *status = Status::Pass;
                 size as u32
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -98,21 +105,30 @@ pub extern "C" fn polyglot_decode_array(status: *mut Status, decoder: *mut Decod
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_decode_map(status: *mut Status, decoder: *mut Decoder, key_kind: Kind, value_kind: Kind) -> u32 {
+pub extern "C" fn polyglot_decode_map(
+    status: *mut Status,
+    decoder: *mut Decoder,
+    key_kind: Kind,
+    value_kind: Kind,
+) -> u32 {
     Status::check_not_null(status);
 
     if decoder.is_null() {
         unsafe {
             *status = Status::NullPointer;
         }
+        return 0;
     }
 
     unsafe {
-        match (*decoder).cursor.decode_map(key_kind.into(), value_kind.into()) {
-            Ok(size ) => {
+        match (*decoder)
+            .cursor
+            .decode_map(key_kind.into(), value_kind.into())
+        {
+            Ok(size) => {
                 *status = Status::Pass;
                 size as u32
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -129,17 +145,18 @@ pub extern "C" fn polyglot_decode_bytes(status: *mut Status, decoder: *mut Decod
         unsafe {
             *status = Status::NullPointer;
         }
+        return std::ptr::null_mut();
     }
 
     unsafe {
         match (*decoder).cursor.decode_bytes() {
-            Ok(value ) => {
+            Ok(value) => {
                 *status = Status::Pass;
                 let mut boxed_value = value.into_boxed_slice();
                 let buffer = Buffer::new_raw(boxed_value.as_mut_ptr(), boxed_value.len() as u32);
                 std::mem::forget(boxed_value);
                 buffer
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 std::ptr::null_mut()
@@ -152,7 +169,8 @@ pub extern "C" fn polyglot_decode_bytes(status: *mut Status, decoder: *mut Decod
 pub extern "C" fn polyglot_free_decode_bytes(buffer: *mut Buffer) {
     if !buffer.is_null() {
         unsafe {
-            let boxed_value = std::slice::from_raw_parts_mut((*buffer).data, (*buffer).length as usize) ;
+            let boxed_value =
+                std::slice::from_raw_parts_mut((*buffer).data, (*buffer).length as usize);
             let value = boxed_value.as_mut_ptr();
             drop(Box::from_raw(value));
             drop(Box::from_raw(buffer));
@@ -161,7 +179,10 @@ pub extern "C" fn polyglot_free_decode_bytes(buffer: *mut Buffer) {
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_decode_string(status: *mut Status, decoder: *mut Decoder) -> *mut c_char{
+pub extern "C" fn polyglot_decode_string(
+    status: *mut Status,
+    decoder: *mut Decoder,
+) -> *mut c_char {
     Status::check_not_null(status);
 
     if decoder.is_null() {
@@ -184,7 +205,7 @@ pub extern "C" fn polyglot_decode_string(status: *mut Status, decoder: *mut Deco
                         std::ptr::null_mut()
                     }
                 };
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 std::ptr::null_mut()
@@ -203,7 +224,7 @@ pub extern "C" fn polyglot_free_decode_string(c_string: *mut c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn polyglot_decode_error(status: *mut Status, decoder: *mut Decoder) -> *mut c_char{
+pub extern "C" fn polyglot_decode_error(status: *mut Status, decoder: *mut Decoder) -> *mut c_char {
     Status::check_not_null(status);
 
     if decoder.is_null() {
@@ -226,7 +247,7 @@ pub extern "C" fn polyglot_decode_error(status: *mut Status, decoder: *mut Decod
                         std::ptr::null_mut()
                     }
                 };
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 std::ptr::null_mut()
@@ -260,7 +281,7 @@ pub extern "C" fn polyglot_decode_bool(status: *mut Status, decoder: *mut Decode
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 false
@@ -285,7 +306,7 @@ pub extern "C" fn polyglot_decode_u8(status: *mut Status, decoder: *mut Decoder)
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -310,7 +331,7 @@ pub extern "C" fn polyglot_decode_u16(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -335,7 +356,7 @@ pub extern "C" fn polyglot_decode_u32(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -360,7 +381,7 @@ pub extern "C" fn polyglot_decode_u64(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -385,7 +406,7 @@ pub extern "C" fn polyglot_decode_i32(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -410,7 +431,7 @@ pub extern "C" fn polyglot_decode_i64(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0
@@ -435,7 +456,7 @@ pub extern "C" fn polyglot_decode_f32(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0.0
@@ -460,7 +481,7 @@ pub extern "C" fn polyglot_decode_f64(status: *mut Status, decoder: *mut Decoder
             Ok(value) => {
                 *status = Status::Pass;
                 value
-            },
+            }
             Err(_) => {
                 *status = Status::Fail;
                 0.0
