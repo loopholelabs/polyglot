@@ -55,3 +55,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [v1.1.2]: https://github.com/loopholelabs/scale/compare/v1.1.2
 [v1.1.1]: https://github.com/loopholelabs/scale/compare/v1.1.1
 [v1.1.0]: https://github.com/loopholelabs/scale/compare/v1.1.0
+
+## [v1.2.0] - 2024-03-14
+
+### Changes
+
+- Updated the names of error values in Go to fit with Go's standard code-style conventions
