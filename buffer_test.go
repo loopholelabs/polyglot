@@ -406,7 +406,7 @@ func TestNilSlice(t *testing.T) {
 	assert.Equal(t, uint32(len(s)), j)
 
 	j, err = d.Slice(StringKind)
-	assert.ErrorIs(t, err, InvalidSlice)
+	assert.ErrorIs(t, err, ErrInvalidSlice)
 	assert.Zero(t, j)
 }
 
@@ -420,7 +420,7 @@ func TestError(t *testing.T) {
 
 	d := Decoder(p.Bytes())
 	_, err := d.String()
-	assert.ErrorIs(t, err, InvalidString)
+	assert.ErrorIs(t, err, ErrInvalidString)
 
 	val, err := d.Error()
 	assert.NoError(t, err)

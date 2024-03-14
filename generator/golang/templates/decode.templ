@@ -1,7 +1,7 @@
 {{define "decode"}}
 func (x *{{ CamelCase .FullName }}) Decode (b []byte) error {
     if x == nil {
-        return NilDecode
+        return ErrDecodeNil
     }
     return x.decode(polyglot.Decoder(b))
 }
