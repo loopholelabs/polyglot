@@ -54,7 +54,7 @@ func (buf *Buffer) MoveOffset(offset int) {
 	buf.offset += offset
 }
 
-func (buf *Buffer) grow(n int) {
+func (buf *Buffer) Grow(n int) {
 	if cap(buf.b)-buf.offset < n {
 		if cap(buf.b) < n {
 			buf.b = append(buf.b[:buf.offset], make([]byte, n+cap(buf.b)-buf.offset)...)
@@ -65,7 +65,7 @@ func (buf *Buffer) grow(n int) {
 }
 
 func (buf *Buffer) Write(b []byte) int {
-	buf.grow(len(b))
+	buf.Grow(len(b))
 	buf.offset += copy(buf.b[buf.offset:], b)
 	return len(b)
 }
