@@ -84,13 +84,13 @@ const (
 )
 
 func encodeNil(b *Buffer) {
-	b.grow(nilSize)
+	b.Grow(nilSize)
 	b.b[b.offset] = NilRawKind
 	b.offset++
 }
 
 func encodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.grow(mapSize)
+	b.Grow(mapSize)
 	offset := b.offset
 	b.b[offset] = MapRawKind
 	offset++
@@ -144,7 +144,7 @@ func encodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
 }
 
 func encodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.grow(sliceSize)
+	b.Grow(sliceSize)
 	offset := b.offset
 	b.b[offset] = SliceRawKind
 	offset++
@@ -196,7 +196,7 @@ func encodeSlice(b *Buffer, size uint32, kind Kind) {
 }
 
 func encodeBytes(b *Buffer, value []byte) {
-	b.grow(bytesSize + len(value))
+	b.Grow(bytesSize + len(value))
 	castValue := uint32(len(value))
 	offset := b.offset
 	b.b[offset] = BytesRawKind
@@ -246,7 +246,7 @@ func encodeBytes(b *Buffer, value []byte) {
 	b.offset = offset + copy(b.b[offset:], value)
 }
 func encodeString(b *Buffer, value string) {
-	b.grow(stringSize + len(value))
+	b.Grow(stringSize + len(value))
 	var nb []byte
 	/* #nosec G103 */
 	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
@@ -307,7 +307,7 @@ func encodeString(b *Buffer, value string) {
 
 func encodeError(b *Buffer, err error) {
 	errString := err.Error()
-	b.grow(errorSize + len(errString))
+	b.Grow(errorSize + len(errString))
 	offset := b.offset
 	b.b[offset] = ErrorRawKind
 	offset++
@@ -371,7 +371,7 @@ func encodeError(b *Buffer, err error) {
 }
 
 func encodeBool(b *Buffer, value bool) {
-	b.grow(boolSize)
+	b.Grow(boolSize)
 	offset := b.offset
 	b.b[offset] = BoolRawKind
 	offset++
@@ -384,7 +384,7 @@ func encodeBool(b *Buffer, value bool) {
 }
 
 func encodeUint8(b *Buffer, value uint8) {
-	b.grow(uint8Size)
+	b.Grow(uint8Size)
 	offset := b.offset
 	b.b[offset] = Uint8RawKind
 	offset++
@@ -393,7 +393,7 @@ func encodeUint8(b *Buffer, value uint8) {
 }
 
 func encodeUint16(b *Buffer, value uint16) {
-	b.grow(uint16Size)
+	b.Grow(uint16Size)
 	offset := b.offset
 	b.b[offset] = Uint16RawKind
 	offset++
@@ -425,7 +425,7 @@ func encodeUint16(b *Buffer, value uint16) {
 }
 
 func encodeUint32(b *Buffer, value uint32) {
-	b.grow(uint32Size)
+	b.Grow(uint32Size)
 	offset := b.offset
 	b.b[offset] = Uint32RawKind
 	offset++
@@ -473,7 +473,7 @@ func encodeUint32(b *Buffer, value uint32) {
 }
 
 func encodeUint64(b *Buffer, value uint64) {
-	b.grow(uint64Size)
+	b.Grow(uint64Size)
 	offset := b.offset
 	b.b[offset] = Uint64RawKind
 	offset++
@@ -553,7 +553,7 @@ func encodeUint64(b *Buffer, value uint64) {
 }
 
 func encodeInt32(b *Buffer, value int32) {
-	b.grow(uint32Size)
+	b.Grow(uint32Size)
 	castValue := uint32(value) << 1
 	if value < 0 {
 		castValue = ^castValue
@@ -605,7 +605,7 @@ func encodeInt32(b *Buffer, value int32) {
 }
 
 func encodeInt64(b *Buffer, value int64) {
-	b.grow(uint64Size)
+	b.Grow(uint64Size)
 	castValue := uint64(value) << 1
 	if value < 0 {
 		castValue = ^castValue
@@ -689,7 +689,7 @@ func encodeInt64(b *Buffer, value int64) {
 }
 
 func encodeFloat32(b *Buffer, value float32) {
-	b.grow(float32Size)
+	b.Grow(float32Size)
 	offset := b.offset
 	b.b[offset] = Float32RawKind
 	offset++
@@ -705,7 +705,7 @@ func encodeFloat32(b *Buffer, value float32) {
 }
 
 func encodeFloat64(b *Buffer, value float64) {
-	b.grow(float64Size)
+	b.Grow(float64Size)
 	offset := b.offset
 	b.b[offset] = Float64RawKind
 	offset++
