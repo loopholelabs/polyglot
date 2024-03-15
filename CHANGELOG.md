@@ -61,3 +61,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changes
 
 - Updated the names of error values in Go to fit with Go's standard code-style conventions
+
+## [v1.2.1] - 2024-03-04
+
+- Made Buffer.grow() in the Polyglot Go library public to allow for better usage patterns with stream readers

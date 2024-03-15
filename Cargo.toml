@@ -1,6 +1,6 @@
 [package]
 name = "polyglot_rs"
-version = "1.2.0"
+version = "1.2.1"
 edition = "2021"
 description="A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages."
 license = "Apache-2.0"
