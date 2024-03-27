@@ -7,9 +7,24 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v1.2.2] - 2024-03-26
+
+### Fixes 
+
+- Fixed a bug in Polyglot Go where the capacity of the buffer would not grow properly resulting in silent short writes and corrupted data
+
+## [v1.2.1] - 2024-03-12
+
 ### Changes
 
-- Significant performance improvements for the Golang implementation 
+- Made Buffer.Grow() in the Polyglot Go library public
+
+## [v1.2.0] - 2024-03-14
+
+### Changes
+
+- Updated the names of error values in Go to fit with Go's standard code-style conventions
+- Significant performance improvements for the Golang implementation
 
 ## [v1.1.4] - 2023-10-12
 
@@ -49,19 +64,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Merging Typescript, Golang, and Rust implementations into a single repository
 
-[unreleased]: https://github.com/loopholelabs/scale/compare/v1.1.4...HEAD
+[unreleased]: https://github.com/loopholelabs/scale/compare/v1.2.2...HEAD
+[v1.2.2]: https://github.com/loopholelabs/scale/compare/v1.2.2
+[v1.2.1]: https://github.com/loopholelabs/scale/compare/v1.2.1
+[v1.2.0]: https://github.com/loopholelabs/scale/compare/v1.2.0
 [v1.1.4]: https://github.com/loopholelabs/scale/compare/v1.1.4
 [v1.1.3]: https://github.com/loopholelabs/scale/compare/v1.1.3
 [v1.1.2]: https://github.com/loopholelabs/scale/compare/v1.1.2
 [v1.1.1]: https://github.com/loopholelabs/scale/compare/v1.1.1
 [v1.1.0]: https://github.com/loopholelabs/scale/compare/v1.1.0
-
-## [v1.2.0] - 2024-03-14
-
-### Changes
-
-- Updated the names of error values in Go to fit with Go's standard code-style conventions
-
-## [v1.2.1] - 2024-03-04
-
-- Made Buffer.grow() in the Polyglot Go library public to allow for better usage patterns with stream readers

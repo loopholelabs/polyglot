@@ -5,7 +5,7 @@ go 1.20
 replace github.com/loopholelabs/polyglot => ../
 
 require (
-	github.com/loopholelabs/polyglot v1.2.1
+	github.com/loopholelabs/polyglot v1.2.2
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.33.0
 )
