@@ -1,6 +1,6 @@
 {
   "name": "@loopholelabs/polyglot",
-  "version": "1.1.4",
+  "version": "1.2.2",
   "license": "Apache-2.0",
   "description": "A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages.",
   "homepage": "https://github.com/loopholelabs/polyglot",
