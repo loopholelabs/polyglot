@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v1.3.0] 2024-04-04]
+
+### Changes
+
+- Updated the names of error values in Go to fit with Go's standard code-style conventions
+
 ## [v1.2.2] - 2024-03-26
 
 ### Fixes 
@@ -23,7 +29,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changes
 
-- Updated the names of error values in Go to fit with Go's standard code-style conventions
 - Significant performance improvements for the Golang implementation
 
 ## [v1.1.4] - 2023-10-12
