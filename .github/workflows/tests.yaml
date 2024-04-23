@@ -17,7 +17,9 @@ jobs:
       - name: Run Tests (Go v1)
         run: go test -v ./...
       - name: Run Tests (Go v2)
-        run: go test -v ./v2/...
+        run: |
+          cd v2
+          go test -v ./...
   rust:
     runs-on: ubuntu-latest
     steps:

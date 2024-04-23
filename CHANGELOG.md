@@ -7,30 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [v2.1.0] 2024-04-04]
+## [v2.0.0] 2024-04-23]
 
 ### Changes
 
 - Updated the names of error values in Go to fit with Go's standard code-style conventions
-
-## [v2.0.2] - 2024-03-26
+- significant performance improvements for the golang implementation
+this update makes necessary changes to the public interface of the library to accomplish this
 
 ### Fixes 
 
 - Fixed a bug in Polyglot Go where the capacity of the buffer would not grow properly resulting in silent short writes and corrupted data
-
-## [v2.0.1] - 2024-03-12
-
-### Changes
-
-- Made Buffer.Grow() in the Polyglot Go library public
-
-## [v2.0.0] - 2024-03-14
-
-### Changes
-
-- Significant performance improvements for the Golang implementation
-This update makes necessary changes to the public interface of the library to accomplish this
 
 ## [v1.1.4] - 2023-10-12
 
