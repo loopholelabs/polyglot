@@ -14,8 +14,10 @@ jobs:
           go-version: "1.21"
           check-latest: true
           cache: true
-      - name: Run Tests
+      - name: Run Tests (Go v1)
         run: go test -v ./...
+      - name: Run Tests (Go v2)
+        run: go test -v ./v2/...
   rust:
     runs-on: ubuntu-latest
     steps:
@@ -33,7 +35,7 @@ jobs:
         run: cargo check
       - name: Cargo check wasm32-wasi
         run: cargo check --target wasm32-wasi
-      - name: Run Tests
+      - name: Run Tests (Rust)
         run: cargo test
   typescript:
     runs-on: ubuntu-latest
@@ -52,7 +54,7 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('*.json') }}
       - name: Install Node Dependencies with NPM
         run: npm install
-      - name: Run Tests
+      - name: Run Tests (JS)
         run: npm run test
   c:
     runs-on: ubuntu-latest
