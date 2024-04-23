@@ -1,0 +1,73 @@
+{{define "encode"}}
+    encode(buf: Uint8Array): Uint8Array {
+        let encoded = buf
+        
+        {{ $encoding := GetEncodingFields .Fields -}}
+
+        {{ range $val := $encoding.Values}}
+        encoded = {{ $val -}}
+        {{end }}
+
+        {{ if $encoding.SliceFields -}}
+            {{template "encodeSlices" $encoding -}}
+        {{end -}}
+        {{ if $encoding.MessageFields -}}
+            {{template "encodeMessages" $encoding -}}
+        {{end}}
+        
+        return encoded
+    }
+{{end}}
+
+{{define "encodeSlices"}}
+    {{ range $field := .SliceFields -}}
+        {{ $encoder := GetLUTEncoder $field.Kind -}}
+
+        {{ if and (eq $encoder "") (eq $field.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+        encoded = {{ TrackDependency "encodeArray" }}(encoded, this._{{ LowercaseCamelCaseName $field.Name}}.length, Kind.Any)
+        this._{{ LowercaseCamelCaseName $field.Name}}.forEach((field) => {
+            encoded = field.encode(encoded)
+        })
+        {{else -}}
+        encoded = {{ TrackDependency "encodeArray" }}(this._{{ LowercaseCamelCaseName $field.Name}}.length, {{ GetKindLUT $field.Kind }})
+        this._{{ LowercaseCamelCaseName $field.Name}}.forEach((field) => {
+            encoded = {{$encoder}}(encoded, field)
+        })
+        {{end -}}
+    {{end -}}
+{{end}}
+
+
+{{define "encodeMessages"}}
+    {{ range $field := .MessageFields -}}
+        {{ if $field.IsMap -}}
+            {{ $keyKind := GetKind $field.MapKey.Kind -}}
+            {{ $valKind := GetKind $field.MapValue.Kind -}}
+            encoded = {{ TrackDependency "encodeMap" }}(encoded, this._{{ LowercaseCamelCaseName $field.Name }}.size, {{ $keyKind }}, {{ $valKind }})
+            this._{{ LowercaseCamelCaseName $field.Name }}.forEach((v, k) => {
+            {{ $keyEncoder := GetLUTEncoder $field.MapKey.Kind -}}
+            {{ if and (eq $keyEncoder "") (eq $field.MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+            encoded = k.encode(encoded)
+            {{else -}}
+                {{ if eq $field.MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                    encoded = {{ TrackDependency "encodeUint32" }}(encoded, k as number)
+                {{else -}}
+                    encoded = {{$keyEncoder}}(encoded, k)
+                {{end -}}
+            {{end -}}
+            {{ $valEncoder := GetLUTEncoder $field.MapValue.Kind -}}
+            {{ if and (eq $valEncoder "") (eq $field.MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+            encoded = v.encode(encoded)
+            {{else -}}
+                {{ if eq $field.MapValue.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                    encoded = {{ TrackDependency "encodeUint32" }}(encoded, v as number)
+                {{else -}}
+                    encoded = {{$valEncoder}}(encoded, v)
+                {{end -}}
+            {{end -}}
+            })
+        {{else -}}
+            encoded = this._{{ LowercaseCamelCaseName $field.Name }}.encode(encoded);
+        {{end -}}
+    {{end -}}
+{{end}}

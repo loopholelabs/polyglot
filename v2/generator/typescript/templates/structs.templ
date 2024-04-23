@@ -1,0 +1,41 @@
+{{define "structs"}}
+    {{ range $i, $v := (MakeIterable $.Messages.Len) }}
+        {{ $message := $.Messages.Get $i }}
+        {{ if not $message.IsMapEntry }}
+            {{template "structs" $message}}
+        {{end}}
+    {{end}}
+    export class {{ CamelCase .FullName }} {
+        constructor(
+        {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
+            {{ $field := $.Fields.Get $i -}}
+            {{ $value := FindValue $field -}}
+            {{ LowercaseCamelCaseName $field.Name }}: {{ $value }},
+        {{end -}}
+        ) {
+            {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
+                {{ $field := $.Fields.Get $i -}}
+                this._{{ LowercaseCamelCaseName $field.Name }} = {{ LowercaseCamelCaseName $field.Name }}
+            {{end -}}
+        }
+
+        {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
+            {{ $field := $.Fields.Get $i -}}
+            {{ $value := FindValue $field -}}
+            private _{{ LowercaseCamelCaseName $field.Name }}: {{ $value }}
+
+            get {{ LowercaseCamelCaseName $field.Name }}(): {{ $value }} {
+                return this._{{ LowercaseCamelCaseName $field.Name }}
+            }
+
+            set {{ LowercaseCamelCaseName $field.Name }}({{ LowercaseCamelCaseName $field.Name }}: {{ $value }}) {
+                this._{{ LowercaseCamelCaseName $field.Name }} = {{ LowercaseCamelCaseName $field.Name }}
+            }
+            
+        {{end -}}
+
+        {{template "encode" .}}
+
+        {{template "decode" .}}
+    } 
+{{end}}

@@ -1,0 +1,11 @@
+{{ if .header -}}
+{{template "headers" .}}
+
+{{template "imports" .}}
+{{ end -}}
+
+{{template "errors" .}}
+
+{{template "enums" .}}
+
+{{template "messages" .}}

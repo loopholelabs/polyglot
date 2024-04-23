@@ -66,10 +66,10 @@ func TestDecodeMap(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeMap((p.Bytes())[1:], StringKind, Uint32Kind)
-	assert.ErrorIs(t, err, ErrInvalidMap)
+	assert.ErrorIs(t, err, InvalidMap)
 
 	_, _, err = decodeMap(p.Bytes(), StringKind, Float64Kind)
-	assert.ErrorIs(t, err, ErrInvalidMap)
+	assert.ErrorIs(t, err, InvalidMap)
 
 	remaining, size, err = decodeMap(p.Bytes(), StringKind, Uint32Kind)
 	assert.NoError(t, err)
@@ -100,7 +100,7 @@ func TestDecodeBytes(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, value, err = decodeBytes((p.Bytes())[1:], value)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.ErrorIs(t, err, InvalidBytes)
 
 	remaining, value, err = decodeBytes(p.Bytes(), value)
 	assert.NoError(t, err)
@@ -163,7 +163,7 @@ func TestDecodeString(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeString((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidString)
+	assert.ErrorIs(t, err, InvalidString)
 
 	remaining, value, err = decodeString(p.Bytes())
 	assert.NoError(t, err)
@@ -208,7 +208,7 @@ func TestDecodeError(t *testing.T) {
 	t.Parallel()
 
 	p := NewBuffer()
-	v := errors.New("test error")
+	v := errors.New("Test Error")
 	encodeError(p, v)
 
 	var value error
@@ -219,7 +219,7 @@ func TestDecodeError(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeError((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidError)
+	assert.ErrorIs(t, err, InvalidError)
 
 	remaining, value, err = decodeError(p.Bytes())
 	assert.NoError(t, err)
@@ -273,7 +273,7 @@ func TestDecodeBool(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeBool((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidBool)
+	assert.ErrorIs(t, err, InvalidBool)
 
 	remaining, value, err = decodeBool(p.Bytes())
 	assert.NoError(t, err)
@@ -329,7 +329,7 @@ func TestDecodeUint8(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeUint8((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidUint8)
+	assert.ErrorIs(t, err, InvalidUint8)
 
 	remaining, value, err = decodeUint8(p.Bytes())
 	assert.NoError(t, err)
@@ -363,7 +363,7 @@ func TestDecodeUint16(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeUint16((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidUint16)
+	assert.ErrorIs(t, err, InvalidUint16)
 
 	remaining, value, err = decodeUint16(p.Bytes())
 	assert.NoError(t, err)
@@ -397,7 +397,7 @@ func TestDecodeUint32(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeUint32((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidUint32)
+	assert.ErrorIs(t, err, InvalidUint32)
 
 	remaining, value, err = decodeUint32(p.Bytes())
 	assert.NoError(t, err)
@@ -432,7 +432,7 @@ func TestDecodeUint64(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeUint64((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidUint64)
+	assert.ErrorIs(t, err, InvalidUint64)
 
 	remaining, value, err = decodeUint64(p.Bytes())
 	assert.NoError(t, err)
@@ -449,6 +449,7 @@ func TestDecodeUint64(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
+
 }
 
 func TestDecodeInt32(t *testing.T) {
@@ -475,7 +476,7 @@ func TestDecodeInt32(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeInt32((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidInt32)
+	assert.ErrorIs(t, err, InvalidInt32)
 
 	remaining, value, err = decodeInt32(p.Bytes())
 	assert.NoError(t, err)
@@ -519,7 +520,7 @@ func TestDecodeInt64(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeInt64((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidInt64)
+	assert.ErrorIs(t, err, InvalidInt64)
 
 	remaining, value, err = decodeInt64(p.Bytes())
 	assert.NoError(t, err)
@@ -554,7 +555,7 @@ func TestDecodeFloat32(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeFloat32((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidFloat32)
+	assert.ErrorIs(t, err, InvalidFloat32)
 
 	remaining, value, err = decodeFloat32(p.Bytes())
 	assert.NoError(t, err)
@@ -571,6 +572,7 @@ func TestDecodeFloat32(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
+
 }
 
 func TestDecodeFloat64(t *testing.T) {
@@ -588,7 +590,7 @@ func TestDecodeFloat64(t *testing.T) {
 	assert.Equal(t, 0, len(remaining))
 
 	_, _, err = decodeFloat64((p.Bytes())[1:])
-	assert.ErrorIs(t, err, ErrInvalidFloat64)
+	assert.ErrorIs(t, err, InvalidFloat64)
 
 	remaining, value, err = decodeFloat64(p.Bytes())
 	assert.NoError(t, err)
@@ -605,4 +607,5 @@ func TestDecodeFloat64(t *testing.T) {
 		p.Reset()
 	})
 	assert.Zero(t, n)
+
 }

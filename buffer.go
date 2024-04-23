@@ -20,64 +20,30 @@ const (
 	defaultSize = 512
 )
 
-type Buffer struct {
-	b      []byte
-	offset int
-}
-
-func NewBuffer() *Buffer {
-	return &Buffer{
-		b:      make([]byte, defaultSize),
-		offset: 0,
-	}
-}
-
-func NewBufferSize(size int) *Buffer {
-	return &Buffer{
-		b:      make([]byte, size),
-		offset: 0,
-	}
-}
-
-func NewBufferFromBytes(b []byte) *Buffer {
-	return &Buffer{
-		b:      b,
-		offset: 0,
-	}
-}
+type Buffer []byte
 
 func (buf *Buffer) Reset() {
-	buf.offset = 0
-}
-
-func (buf *Buffer) MoveOffset(offset int) {
-	buf.offset += offset
-}
-
-func (buf *Buffer) Grow(n int) {
-	if cap(buf.b)-buf.offset < n {
-		if cap(buf.b) < n {
-			buf.b = append(buf.b[:buf.offset], make([]byte, n+cap(buf.b)-buf.offset)...)
-		} else {
-			buf.b = append(buf.b[:buf.offset], make([]byte, cap(buf.b)*2-buf.offset)...)
-		}
-	}
+	*buf = (*buf)[:0]
 }
 
 func (buf *Buffer) Write(b []byte) int {
-	buf.Grow(len(b))
-	buf.offset += copy(buf.b[buf.offset:cap(buf.b)], b)
+	if cap(*buf)-len(*buf) < len(b) {
+		*buf = append((*buf)[:len(*buf)], b...)
+	} else {
+		*buf = (*buf)[:len(*buf)+copy((*buf)[len(*buf):cap(*buf)], b)]
+	}
 	return len(b)
 }
 
+func NewBuffer() *Buffer {
+	c := make(Buffer, 0, defaultSize)
+	return &c
+}
+
 func (buf *Buffer) Bytes() []byte {
-	return buf.b[:buf.offset]
+	return *buf
 }
 
 func (buf *Buffer) Len() int {
-	return buf.offset
-}
-
-func (buf *Buffer) Cap() int {
-	return cap(buf.b)
+	return len(*buf)
 }

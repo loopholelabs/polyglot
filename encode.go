@@ -22,231 +22,66 @@ import (
 	"unsafe"
 )
 
-var (
-	NilRawKind     = byte(0)
-	SliceRawKind   = byte(1)
-	MapRawKind     = byte(2)
-	AnyRawKind     = byte(3)
-	BytesRawKind   = byte(4)
-	StringRawKind  = byte(5)
-	ErrorRawKind   = byte(6)
-	BoolRawKind    = byte(7)
-	Uint8RawKind   = byte(8)
-	Uint16RawKind  = byte(9)
-	Uint32RawKind  = byte(10)
-	Uint64RawKind  = byte(11)
-	Int32RawKind   = byte(12)
-	Int64RawKind   = byte(13)
-	Float32RawKind = byte(14)
-	Float64RawKind = byte(15)
-)
-
-type Kind byte
+type Kind []byte
 
 var (
-	NilKind     = Kind(NilRawKind)
-	SliceKind   = Kind(SliceRawKind)
-	MapKind     = Kind(MapRawKind)
-	AnyKind     = Kind(AnyRawKind)
-	BytesKind   = Kind(BytesRawKind)
-	StringKind  = Kind(StringRawKind)
-	ErrorKind   = Kind(ErrorRawKind)
-	BoolKind    = Kind(BoolRawKind)
-	Uint8Kind   = Kind(Uint8RawKind)
-	Uint16Kind  = Kind(Uint16RawKind)
-	Uint32Kind  = Kind(Uint32RawKind)
-	Uint64Kind  = Kind(Uint64RawKind)
-	Int32Kind   = Kind(Int32RawKind)
-	Int64Kind   = Kind(Int64RawKind)
-	Float32Kind = Kind(Float32RawKind)
-	Float64Kind = Kind(Float64RawKind)
+	NilKind     = Kind([]byte{0})
+	SliceKind   = Kind([]byte{1})
+	MapKind     = Kind([]byte{2})
+	AnyKind     = Kind([]byte{3})
+	BytesKind   = Kind([]byte{4})
+	StringKind  = Kind([]byte{5})
+	ErrorKind   = Kind([]byte{6})
+	BoolKind    = Kind([]byte{7})
+	Uint8Kind   = Kind([]byte{8})
+	Uint16Kind  = Kind([]byte{9})
+	Uint32Kind  = Kind([]byte{10})
+	Uint64Kind  = Kind([]byte{11})
+	Int32Kind   = Kind([]byte{12})
+	Int64Kind   = Kind([]byte{13})
+	Float32Kind = Kind([]byte{14})
+	Float64Kind = Kind([]byte{15})
 )
+
+type Error string
+
+func (e Error) Error() string {
+	return string(e)
+}
+
+func (e Error) Is(err error) bool {
+	return e.Error() == err.Error()
+}
 
 var (
 	falseBool = byte(0)
 	trueBool  = byte(1)
 )
 
-const (
-	nilSize     = 1
-	mapSize     = 3 + uint32Size
-	sliceSize   = 2 + uint32Size
-	bytesSize   = 1 + uint32Size
-	stringSize  = 1 + uint32Size
-	errorSize   = 1 + stringSize
-	boolSize    = 2
-	uint8Size   = 2
-	uint16Size  = 1 + VarIntLen16
-	uint32Size  = 1 + VarIntLen32
-	uint64Size  = 1 + VarIntLen64
-	float32Size = 5
-	float64Size = 9
-)
-
 func encodeNil(b *Buffer) {
-	b.Grow(nilSize)
-	b.b[b.offset] = NilRawKind
-	b.offset++
+	b.Write(NilKind)
 }
 
-func encodeMap(b *Buffer, size uint32, keyKind Kind, valueKind Kind) {
-	b.Grow(mapSize)
-	offset := b.offset
-	b.b[offset] = MapRawKind
-	offset++
-	b.b[offset] = byte(keyKind)
-	offset++
-	b.b[offset] = byte(valueKind)
-	offset++
-	b.b[offset] = Uint32RawKind
-	offset++
-	if size < continuation {
-		b.b[offset] = byte(size)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(size&(continuation-1)) | continuation
-		offset++
-		size >>= 7
-		if size < continuation {
-			b.b[offset] = byte(size)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(size&(continuation-1)) | continuation
-			offset++
-			size >>= 7
-			if size < continuation {
-				b.b[offset] = byte(size)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(size&(continuation-1)) | continuation
-				offset++
-				size >>= 7
-				if size < continuation {
-					b.b[offset] = byte(size)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(size&(continuation-1)) | continuation
-					offset++
-					size >>= 7
-					if size < continuation {
-						b.b[offset] = byte(size)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(size&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(size >> 7)
-						b.offset = offset + 1
-					}
-				}
-			}
-		}
-	}
+func encodeMap(b *Buffer, size uint32, keyKind, valueKind Kind) {
+	b.Write(MapKind)
+	b.Write(keyKind)
+	b.Write(valueKind)
+	encodeUint32(b, size)
 }
 
 func encodeSlice(b *Buffer, size uint32, kind Kind) {
-	b.Grow(sliceSize)
-	offset := b.offset
-	b.b[offset] = SliceRawKind
-	offset++
-	b.b[offset] = byte(kind)
-	offset++
-	b.b[offset] = Uint32RawKind
-	offset++
-	if size < continuation {
-		b.b[offset] = byte(size)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(size&(continuation-1)) | continuation
-		offset++
-		size >>= 7
-		if size < continuation {
-			b.b[offset] = byte(size)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(size&(continuation-1)) | continuation
-			offset++
-			size >>= 7
-			if size < continuation {
-				b.b[offset] = byte(size)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(size&(continuation-1)) | continuation
-				offset++
-				size >>= 7
-				if size < continuation {
-					b.b[offset] = byte(size)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(size&(continuation-1)) | continuation
-					offset++
-					size >>= 7
-					if size < continuation {
-						b.b[offset] = byte(size)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(size&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(size >> 7)
-						b.offset = offset + 1
-					}
-				}
-			}
-		}
-	}
+	b.Write(SliceKind)
+	b.Write(kind)
+	encodeUint32(b, size)
 }
 
 func encodeBytes(b *Buffer, value []byte) {
-	b.Grow(bytesSize + len(value))
-	castValue := uint32(len(value))
-	offset := b.offset
-	b.b[offset] = BytesRawKind
-	offset++
-	b.b[offset] = Uint32RawKind
-	offset++
-	if castValue < continuation {
-		b.b[offset] = byte(castValue)
-		offset++
-	} else {
-		b.b[offset] = byte(castValue&(continuation-1)) | continuation
-		offset++
-		castValue >>= 7
-		if castValue < continuation {
-			b.b[offset] = byte(castValue)
-			offset++
-		} else {
-			b.b[offset] = byte(castValue&(continuation-1)) | continuation
-			offset++
-			castValue >>= 7
-			if castValue < continuation {
-				b.b[offset] = byte(castValue)
-				offset++
-			} else {
-				b.b[offset] = byte(castValue&(continuation-1)) | continuation
-				offset++
-				castValue >>= 7
-				if castValue < continuation {
-					b.b[offset] = byte(castValue)
-					offset++
-				} else {
-					b.b[offset] = byte(castValue&(continuation-1)) | continuation
-					offset++
-					castValue >>= 7
-					if castValue < continuation {
-						b.b[offset] = byte(castValue)
-					} else {
-						b.b[offset] = byte(castValue&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(castValue >> 7)
-						offset++
-					}
-				}
-			}
-		}
-	}
-	b.offset = offset + copy(b.b[offset:], value)
+	b.Write(BytesKind)
+	encodeUint32(b, uint32(len(value)))
+	b.Write(value)
 }
+
 func encodeString(b *Buffer, value string) {
-	b.Grow(stringSize + len(value))
 	var nb []byte
 	/* #nosec G103 */
 	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
@@ -255,475 +90,100 @@ func encodeString(b *Buffer, value string) {
 	bh.Data = sh.Data
 	bh.Cap = sh.Len
 	bh.Len = sh.Len
-	offset := b.offset
-	castValue := uint32(len(nb))
-	b.b[offset] = StringRawKind
-	offset++
-	b.b[offset] = Uint32RawKind
-	offset++
-	if castValue < continuation {
-		b.b[offset] = byte(castValue)
-		offset++
-	} else {
-		b.b[offset] = byte(castValue&(continuation-1)) | continuation
-		offset++
-		castValue >>= 7
-		if castValue < continuation {
-			b.b[offset] = byte(castValue)
-			offset++
-		} else {
-			b.b[offset] = byte(castValue&(continuation-1)) | continuation
-			offset++
-			castValue >>= 7
-			if castValue < continuation {
-				b.b[offset] = byte(castValue)
-				offset++
-			} else {
-				b.b[offset] = byte(castValue&(continuation-1)) | continuation
-				offset++
-				castValue >>= 7
-				if castValue < continuation {
-					b.b[offset] = byte(castValue)
-					offset++
-				} else {
-					b.b[offset] = byte(castValue&(continuation-1)) | continuation
-					offset++
-					castValue >>= 7
-					if castValue < continuation {
-						b.b[offset] = byte(castValue)
-						offset++
-					} else {
-						b.b[offset] = byte(castValue&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(castValue >> 7)
-						offset++
-					}
-				}
-			}
-		}
-	}
-	b.offset = offset + copy(b.b[offset:], nb)
+	b.Write(StringKind)
+	encodeUint32(b, uint32(len(nb)))
+	b.Write(nb)
 }
 
 func encodeError(b *Buffer, err error) {
-	errString := err.Error()
-	b.Grow(errorSize + len(errString))
-	offset := b.offset
-	b.b[offset] = ErrorRawKind
-	offset++
-
-	var nb []byte
-	/* #nosec G103 */
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
-	/* #nosec G103 */
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&errString))
-	bh.Data = sh.Data
-	bh.Cap = sh.Len
-	bh.Len = sh.Len
-	castValue := uint32(len(nb))
-	b.b[offset] = StringRawKind
-	offset++
-
-	b.b[offset] = Uint32RawKind
-	offset++
-	if castValue < continuation {
-		b.b[offset] = byte(castValue)
-		offset++
-	} else {
-		b.b[offset] = byte(castValue&(continuation-1)) | continuation
-		offset++
-		castValue >>= 7
-		if castValue < continuation {
-			b.b[offset] = byte(castValue)
-			offset++
-		} else {
-			b.b[offset] = byte(castValue&(continuation-1)) | continuation
-			offset++
-			castValue >>= 7
-			if castValue < continuation {
-				b.b[offset] = byte(castValue)
-				offset++
-			} else {
-				b.b[offset] = byte(castValue&(continuation-1)) | continuation
-				offset++
-				castValue >>= 7
-				if castValue < continuation {
-					b.b[offset] = byte(castValue)
-					offset++
-				} else {
-					b.b[offset] = byte(castValue&(continuation-1)) | continuation
-					offset++
-					castValue >>= 7
-					if castValue < continuation {
-						b.b[offset] = byte(castValue)
-						offset++
-					} else {
-						b.b[offset] = byte(castValue&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(castValue >> 7)
-						offset++
-					}
-				}
-			}
-		}
-	}
-	b.offset = offset + copy(b.b[offset:], nb)
+	b.Write(ErrorKind)
+	encodeString(b, err.Error())
 }
 
 func encodeBool(b *Buffer, value bool) {
-	b.Grow(boolSize)
-	offset := b.offset
-	b.b[offset] = BoolRawKind
-	offset++
+	b.Write(BoolKind)
 	if value {
-		b.b[offset] = trueBool
+		*b = append(*b, trueBool)
 	} else {
-		b.b[offset] = falseBool
+		*b = append(*b, falseBool)
 	}
-	b.offset = offset + 1
 }
 
 func encodeUint8(b *Buffer, value uint8) {
-	b.Grow(uint8Size)
-	offset := b.offset
-	b.b[offset] = Uint8RawKind
-	offset++
-	b.b[offset] = value
-	b.offset = offset + 1
+	b.Write(Uint8Kind)
+	*b = append(*b, value)
 }
 
+// Variable integer encoding with the same format as binary.varint
+// (https://developers.google.com/protocol-buffers/docs/encoding#varints)
 func encodeUint16(b *Buffer, value uint16) {
-	b.Grow(uint16Size)
-	offset := b.offset
-	b.b[offset] = Uint16RawKind
-	offset++
-	if value < continuation {
-		b.b[offset] = byte(value)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(value&(continuation-1)) | continuation
-		offset++
+	b.Write(Uint16Kind)
+	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
+		*b = append(*b, byte(value)|continuation)
 		value >>= 7
-		if value < continuation {
-			b.b[offset] = byte(value)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(value&(continuation-1)) | continuation
-			offset++
-			value >>= 7
-			if value < continuation {
-				b.b[offset] = byte(value)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(value&(continuation-1)) | continuation
-				offset++
-				b.b[offset] = byte(value >> 7)
-				b.offset = offset + 1
-			}
-		}
 	}
+	*b = append(*b, byte(value))
 }
 
 func encodeUint32(b *Buffer, value uint32) {
-	b.Grow(uint32Size)
-	offset := b.offset
-	b.b[offset] = Uint32RawKind
-	offset++
-	if value < continuation {
-		b.b[offset] = byte(value)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(value&(continuation-1)) | continuation
-		offset++
+	b.Write(Uint32Kind)
+	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
+		*b = append(*b, byte(value)|continuation)
 		value >>= 7
-		if value < continuation {
-			b.b[offset] = byte(value)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(value&(continuation-1)) | continuation
-			offset++
-			value >>= 7
-			if value < continuation {
-				b.b[offset] = byte(value)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(value&(continuation-1)) | continuation
-				offset++
-				value >>= 7
-				if value < continuation {
-					b.b[offset] = byte(value)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(value&(continuation-1)) | continuation
-					offset++
-					value >>= 7
-					if value < continuation {
-						b.b[offset] = byte(value)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(value&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(value >> 7)
-						b.offset = offset + 1
-					}
-				}
-			}
-		}
 	}
+	*b = append(*b, byte(value))
 }
 
 func encodeUint64(b *Buffer, value uint64) {
-	b.Grow(uint64Size)
-	offset := b.offset
-	b.b[offset] = Uint64RawKind
-	offset++
-	if value < continuation {
-		b.b[offset] = byte(value)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(value&(continuation-1)) | continuation
-		offset++
+	b.Write(Uint64Kind)
+	for value >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
+		*b = append(*b, byte(value)|continuation)
 		value >>= 7
-		if value < continuation {
-			b.b[offset] = byte(value)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(value&(continuation-1)) | continuation
-			offset++
-			value >>= 7
-			if value < continuation {
-				b.b[offset] = byte(value)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(value&(continuation-1)) | continuation
-				offset++
-				value >>= 7
-				if value < continuation {
-					b.b[offset] = byte(value)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(value&(continuation-1)) | continuation
-					offset++
-					value >>= 7
-					if value < continuation {
-						b.b[offset] = byte(value)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(value&(continuation-1)) | continuation
-						offset++
-						value >>= 7
-						if value < continuation {
-							b.b[offset] = byte(value)
-							b.offset = offset + 1
-						} else {
-							b.b[offset] = byte(value&(continuation-1)) | continuation
-							offset++
-							value >>= 7
-							if value < continuation {
-								b.b[offset] = byte(value)
-								b.offset = offset + 1
-							} else {
-								b.b[offset] = byte(value&(continuation-1)) | continuation
-								offset++
-								value >>= 7
-								if value < continuation {
-									b.b[offset] = byte(value)
-									b.offset = offset + 1
-								} else {
-									b.b[offset] = byte(value&(continuation-1)) | continuation
-									offset++
-									value >>= 7
-									if value < continuation {
-										b.b[offset] = byte(value)
-										b.offset = offset + 1
-									} else {
-										b.b[offset] = byte(value&(continuation-1)) | continuation
-										offset++
-										b.b[offset] = byte(value >> 7)
-										b.offset = offset + 1
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
 	}
+	*b = append(*b, byte(value))
 }
 
 func encodeInt32(b *Buffer, value int32) {
-	b.Grow(uint32Size)
+	b.Write(Int32Kind)
+	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint32(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
-	offset := b.offset
-	b.b[offset] = Int32RawKind
-	offset++
-	if castValue < continuation {
-		b.b[offset] = byte(castValue)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(castValue&(continuation-1)) | continuation
-		offset++
+	for castValue >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
+		*b = append(*b, byte(castValue)|continuation)
 		castValue >>= 7
-		if castValue < continuation {
-			b.b[offset] = byte(castValue)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(castValue&(continuation-1)) | continuation
-			offset++
-			castValue >>= 7
-			if castValue < continuation {
-				b.b[offset] = byte(castValue)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(castValue&(continuation-1)) | continuation
-				offset++
-				castValue >>= 7
-				if castValue < continuation {
-					b.b[offset] = byte(castValue)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(castValue&(continuation-1)) | continuation
-					offset++
-					castValue >>= 7
-					if castValue < continuation {
-						b.b[offset] = byte(castValue)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(castValue&(continuation-1)) | continuation
-						offset++
-						b.b[offset] = byte(castValue >> 7)
-						b.offset = offset + 1
-					}
-				}
-			}
-		}
 	}
+	*b = append(*b, byte(castValue))
 }
 
 func encodeInt64(b *Buffer, value int64) {
-	b.Grow(uint64Size)
+	b.Write(Int64Kind)
+	// Shift the value to the left by 1 bit, then flip the bits if the value is negative.
 	castValue := uint64(value) << 1
 	if value < 0 {
 		castValue = ^castValue
 	}
-	offset := b.offset
-	b.b[offset] = Int64RawKind
-	offset++
-	if castValue < continuation {
-		b.b[offset] = byte(castValue)
-		b.offset = offset + 1
-	} else {
-		b.b[offset] = byte(castValue&(continuation-1)) | continuation
-		offset++
+	for castValue >= continuation {
+		// Append the lower 7 bits of the value, then shift the value to the right by 7 bits.
+		*b = append(*b, byte(castValue)|continuation)
 		castValue >>= 7
-		if castValue < continuation {
-			b.b[offset] = byte(castValue)
-			b.offset = offset + 1
-		} else {
-			b.b[offset] = byte(castValue&(continuation-1)) | continuation
-			offset++
-			castValue >>= 7
-			if castValue < continuation {
-				b.b[offset] = byte(castValue)
-				b.offset = offset + 1
-			} else {
-				b.b[offset] = byte(castValue&(continuation-1)) | continuation
-				offset++
-				castValue >>= 7
-				if castValue < continuation {
-					b.b[offset] = byte(castValue)
-					b.offset = offset + 1
-				} else {
-					b.b[offset] = byte(castValue&(continuation-1)) | continuation
-					offset++
-					castValue >>= 7
-					if castValue < continuation {
-						b.b[offset] = byte(castValue)
-						b.offset = offset + 1
-					} else {
-						b.b[offset] = byte(castValue&(continuation-1)) | continuation
-						offset++
-						castValue >>= 7
-						if castValue < continuation {
-							b.b[offset] = byte(castValue)
-							b.offset = offset + 1
-						} else {
-							b.b[offset] = byte(castValue&(continuation-1)) | continuation
-							offset++
-							castValue >>= 7
-							if castValue < continuation {
-								b.b[offset] = byte(castValue)
-								b.offset = offset + 1
-							} else {
-								b.b[offset] = byte(castValue&(continuation-1)) | continuation
-								offset++
-								castValue >>= 7
-								if castValue < continuation {
-									b.b[offset] = byte(castValue)
-									b.offset = offset + 1
-								} else {
-									b.b[offset] = byte(castValue&(continuation-1)) | continuation
-									offset++
-									castValue >>= 7
-									if castValue < continuation {
-										b.b[offset] = byte(castValue)
-										b.offset = offset + 1
-									} else {
-										b.b[offset] = byte(castValue&(continuation-1)) | continuation
-										offset++
-										b.b[offset] = byte(castValue >> 7)
-										b.offset = offset + 1
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
 	}
+	*b = append(*b, byte(castValue))
 }
 
 func encodeFloat32(b *Buffer, value float32) {
-	b.Grow(float32Size)
-	offset := b.offset
-	b.b[offset] = Float32RawKind
-	offset++
+	b.Write(Float32Kind)
 	castValue := math.Float32bits(value)
-	b.b[offset] = byte(castValue >> 24)
-	offset++
-	b.b[offset] = byte(castValue >> 16)
-	offset++
-	b.b[offset] = byte(castValue >> 8)
-	offset++
-	b.b[offset] = byte(castValue)
-	b.offset = offset + 1
+	*b = append(*b, byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
 }
 
 func encodeFloat64(b *Buffer, value float64) {
-	b.Grow(float64Size)
-	offset := b.offset
-	b.b[offset] = Float64RawKind
-	offset++
+	b.Write(Float64Kind)
 	castValue := math.Float64bits(value)
-	b.b[offset] = byte(castValue >> 56)
-	offset++
-	b.b[offset] = byte(castValue >> 48)
-	offset++
-	b.b[offset] = byte(castValue >> 40)
-	offset++
-	b.b[offset] = byte(castValue >> 32)
-	offset++
-	b.b[offset] = byte(castValue >> 24)
-	offset++
-	b.b[offset] = byte(castValue >> 16)
-	offset++
-	b.b[offset] = byte(castValue >> 8)
-	offset++
-	b.b[offset] = byte(castValue)
-	b.offset = offset + 1
+	*b = append(*b, byte(castValue>>56), byte(castValue>>48), byte(castValue>>40), byte(castValue>>32), byte(castValue>>24), byte(castValue>>16), byte(castValue>>8), byte(castValue))
 }

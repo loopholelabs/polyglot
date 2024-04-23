@@ -32,7 +32,7 @@ func TestEncoderNil(t *testing.T) {
 	Encoder(p).Nil()
 
 	assert.Equal(t, 1, len(p.Bytes()))
-	assert.Equal(t, NilKind, Kind(p.Bytes()[0]))
+	assert.Equal(t, NilKind, Kind(p.Bytes()))
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {

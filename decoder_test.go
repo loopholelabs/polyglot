@@ -29,21 +29,24 @@ func TestDecoderNil(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Nil()
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value := d.Nil()
 	assert.True(t, value)
 
 	value = d.Nil()
 	assert.False(t, value)
 
+	d.Return()
+
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Nil()
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value = d.Nil()
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderMap(t *testing.T) {
@@ -60,7 +63,7 @@ func TestDecoderMap(t *testing.T) {
 		e.String(k).Uint32(v)
 	}
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	size, err := d.Map(StringKind, Uint32Kind)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(len(m)), size)
@@ -78,8 +81,10 @@ func TestDecoderMap(t *testing.T) {
 	assert.Equal(t, m, mv)
 
 	size, err = d.Map(StringKind, Uint32Kind)
-	assert.ErrorIs(t, err, ErrInvalidMap)
+	assert.ErrorIs(t, err, InvalidMap)
 	assert.Equal(t, uint32(0), size)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -87,15 +92,16 @@ func TestDecoderMap(t *testing.T) {
 		for k, v = range m {
 			e.String(k).Uint32(v)
 		}
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		size, err = d.Map(StringKind, Uint32Kind)
 		for i := uint32(0); i < size; i++ {
 			_, _ = d.String()
 			_, _ = d.Uint32()
 		}
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderSlice(t *testing.T) {
@@ -109,7 +115,7 @@ func TestDecoderSlice(t *testing.T) {
 		e.String(v)
 	}
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	size, err := d.Slice(StringKind)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(len(m)), size)
@@ -123,8 +129,10 @@ func TestDecoderSlice(t *testing.T) {
 	assert.Equal(t, m, mv)
 
 	size, err = d.Slice(StringKind)
-	assert.ErrorIs(t, err, ErrInvalidSlice)
+	assert.ErrorIs(t, err, InvalidSlice)
 	assert.Equal(t, uint32(0), size)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
@@ -132,14 +140,15 @@ func TestDecoderSlice(t *testing.T) {
 		for _, v := range m {
 			e.String(v)
 		}
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		size, err = d.Slice(StringKind)
 		for i := uint32(0); i < size; i++ {
 			_, _ = d.String()
 		}
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderBytes(t *testing.T) {
@@ -150,23 +159,25 @@ func TestDecoderBytes(t *testing.T) {
 
 	Encoder(p).Bytes(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Bytes(nil)
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Bytes(value)
-	assert.ErrorIs(t, err, ErrInvalidBytes)
+	assert.ErrorIs(t, err, InvalidBytes)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Bytes(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Bytes(value)
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderString(t *testing.T) {
@@ -177,23 +188,25 @@ func TestDecoderString(t *testing.T) {
 
 	Encoder(p).String(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.String()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.String()
-	assert.ErrorIs(t, err, ErrInvalidString)
+	assert.ErrorIs(t, err, InvalidString)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).String(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.String()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(2), n)
+	assert.Equal(t, float64(1), n)
 }
 
 func TestDecoderError(t *testing.T) {
@@ -204,23 +217,25 @@ func TestDecoderError(t *testing.T) {
 
 	Encoder(p).Error(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Error()
 	assert.NoError(t, err)
 	assert.ErrorIs(t, value, v)
 
 	value, err = d.Error()
-	assert.ErrorIs(t, err, ErrInvalidError)
+	assert.ErrorIs(t, err, InvalidError)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Error(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Error()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(3), n)
+	assert.Equal(t, float64(2), n)
 }
 
 func TestDecoderBool(t *testing.T) {
@@ -229,23 +244,25 @@ func TestDecoderBool(t *testing.T) {
 	p := NewBuffer()
 	Encoder(p).Bool(true)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Bool()
 	assert.NoError(t, err)
 	assert.True(t, value)
 
 	value, err = d.Bool()
-	assert.ErrorIs(t, err, ErrInvalidBool)
+	assert.ErrorIs(t, err, InvalidBool)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Bool(true)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Bool()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderUint8(t *testing.T) {
@@ -256,23 +273,25 @@ func TestDecoderUint8(t *testing.T) {
 
 	Encoder(p).Uint8(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Uint8()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Uint8()
-	assert.ErrorIs(t, err, ErrInvalidUint8)
+	assert.ErrorIs(t, err, InvalidUint8)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Uint8(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Uint8()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderUint16(t *testing.T) {
@@ -283,23 +302,25 @@ func TestDecoderUint16(t *testing.T) {
 
 	Encoder(p).Uint16(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Uint16()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Uint16()
-	assert.ErrorIs(t, err, ErrInvalidUint16)
+	assert.ErrorIs(t, err, InvalidUint16)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Uint16(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Uint16()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderUint32(t *testing.T) {
@@ -310,23 +331,25 @@ func TestDecoderUint32(t *testing.T) {
 
 	Encoder(p).Uint32(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Uint32()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Uint32()
-	assert.ErrorIs(t, err, ErrInvalidUint32)
+	assert.ErrorIs(t, err, InvalidUint32)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Uint32(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Uint32()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderUint64(t *testing.T) {
@@ -337,23 +360,25 @@ func TestDecoderUint64(t *testing.T) {
 
 	Encoder(p).Uint64(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Uint64()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Uint64()
-	assert.ErrorIs(t, err, ErrInvalidUint64)
+	assert.ErrorIs(t, err, InvalidUint64)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Uint64(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Uint64()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderInt32(t *testing.T) {
@@ -364,23 +389,25 @@ func TestDecoderInt32(t *testing.T) {
 
 	Encoder(p).Int32(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Int32()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Int32()
-	assert.ErrorIs(t, err, ErrInvalidInt32)
+	assert.ErrorIs(t, err, InvalidInt32)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Int32(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Int32()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderInt64(t *testing.T) {
@@ -391,23 +418,25 @@ func TestDecoderInt64(t *testing.T) {
 
 	Encoder(p).Int64(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Int64()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Int64()
-	assert.ErrorIs(t, err, ErrInvalidInt64)
+	assert.ErrorIs(t, err, InvalidInt64)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Int64(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Int64()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderFloat32(t *testing.T) {
@@ -418,23 +447,25 @@ func TestDecoderFloat32(t *testing.T) {
 
 	Encoder(p).Float32(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Float32()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Float32()
-	assert.ErrorIs(t, err, ErrInvalidFloat32)
+	assert.ErrorIs(t, err, InvalidFloat32)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Float32(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Float32()
-
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
 
 func TestDecoderFloat64(t *testing.T) {
@@ -445,20 +476,23 @@ func TestDecoderFloat64(t *testing.T) {
 
 	Encoder(p).Float64(v)
 
-	d := Decoder(p.Bytes())
+	d := GetDecoder(p.Bytes())
 	value, err := d.Float64()
 	assert.NoError(t, err)
 	assert.Equal(t, v, value)
 
 	value, err = d.Float64()
-	assert.ErrorIs(t, err, ErrInvalidFloat64)
+	assert.ErrorIs(t, err, InvalidFloat64)
+
+	d.Return()
 
 	p.Reset()
 	n := testing.AllocsPerRun(100, func() {
 		Encoder(p).Float64(v)
-		d = Decoder(p.Bytes())
+		d = GetDecoder(p.Bytes())
 		value, err = d.Float64()
+		d.Return()
 		p.Reset()
 	})
-	assert.Equal(t, float64(1), n)
+	assert.Zero(t, n)
 }
