@@ -1,0 +1,7 @@
+{{define "imports"}}
+import (
+{{range $im := .requiredImports -}}
+    "{{$im}}"
+{{end -}}
+)
+{{end}}

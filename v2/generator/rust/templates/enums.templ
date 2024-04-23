@@ -1,0 +1,19 @@
+{{define "enums"}}
+{{range $i, $e := (MakeIterable .enums.Len) -}}
+{{ $enum := ($.enums.Get $i) -}}
+{{template "enum" $enum}}
+{{end -}}
+{{end}}
+
+{{define "enum"}}
+{{ $enumName := (CamelCase $.FullName) -}}
+#[derive(Debug, Eq, PartialEq, TryFromPrimitive, Copy, Clone)]
+#[repr(u32)]
+pub enum {{ $enumName }} {
+    {{range $i, $v := (MakeIterable $.Values.Len) -}}
+        {{ $val := ($.Values.Get $i) -}}
+        {{$val.Name}} = {{ $i }},
+    {{end -}}
+}
+{{end}}
+

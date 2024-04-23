@@ -16,4 +16,4 @@ jobs:
           cache: true
       - name: Run Benchmarks
         run: make benchmark-polyglot
-        working-directory: benchmarks
+        working-directory: v2/benchmarks

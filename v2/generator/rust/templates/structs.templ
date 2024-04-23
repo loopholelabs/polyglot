@@ -1,0 +1,26 @@
+{{define "structs"}}
+    {{ range $i, $v := (MakeIterable $.Messages.Len) }}
+        {{ $message := $.Messages.Get $i }}
+        {{ if not $message.IsMapEntry }}
+            {{template "structs" $message}}
+        {{end}}
+    {{end}}
+    pub struct {{ CamelCase .FullName }} {
+        {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
+            {{ $field := $.Fields.Get $i -}}
+            {{ $value := FindValue $field -}}
+
+            {{  $privacy := GeneratedFieldPrivacy -}}
+            {{ if eq $privacy "private" -}}
+            {{ SnakeCaseName $field.Name }}: {{ $value }},
+            {{ else if eq $privacy "public" -}}
+            pub {{ SnakeCaseName $field.Name }}: {{ $value }},
+            {{ else -}}
+            pub(crate) {{ SnakeCaseName $field.Name }}: {{ $value }},
+            {{ end -}}
+        {{end -}}
+    }
+
+    {{template "encode" .}}
+    {{template "decode" .}}
+{{end}}

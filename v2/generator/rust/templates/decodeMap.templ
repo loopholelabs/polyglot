@@ -1,0 +1,40 @@
+{{define "decodeMap"}}
+{{ $mapKeyValue := FindValue .MapKey }}
+{{ $mapValueValue := FindValue .MapValue }}
+fn {{ SnakeCaseName .Name }}_decode(b: &mut Cursor<&mut Vec<u8>>) -> Result<Option<HashMap<{{ $mapKeyValue }}, {{ $mapValueValue }}>>, Box<dyn std::error::Error>> {
+    if b.decode_none() {
+        return Ok(None);
+    }
+
+    {{ $keyDecoder := GetLUTDecoder .MapKey.Kind -}}
+    {{ $valDecoder := GetLUTDecoder .MapValue.Kind -}}
+
+    {{ $keyKind := GetKind .MapKey.Kind -}}
+    {{ $valKind := GetKind .MapValue.Kind -}}
+    let size = b.decode_map({{ $keyKind }}, {{ $valKind }})
+    .ok().ok_or(DecodingError::InvalidU32)?;
+    let mut map = HashMap::new();
+    for _ in 0..size {
+        {{ if and (eq $keyDecoder "") (eq .MapKey.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+        let k = {{ CamelCase .MapKey.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidMap)?';
+        {{else -}}
+            {{ if eq .MapKey.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+            let k = {{ $mapKeyValue }}::try_from(b{{$keyDecoder}}()?).ok().ok_or(DecodingError::InvalidMap)?;
+            {{else -}}
+                let k = b{{$keyDecoder}}()?;
+            {{end -}}
+        {{end -}}
+        {{ if and (eq $valDecoder "") (eq .MapValue.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
+        let v = {{ CamelCase .MapValue.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidMap)?;
+        {{else -}}
+            {{ if eq .MapValue.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+            let v = {{ $mapValueValue }}::try_from(b{{$valDecoder}}()?).ok().ok_or(DecodingError::InvalidMap)?;
+            {{else -}}
+                let v = b{{$valDecoder}}()?;
+            {{end -}}
+        {{end -}}
+        map.insert(k, v);
+    }
+    Ok(Some(map))
+}
+{{end}}

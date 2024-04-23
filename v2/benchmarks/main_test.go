@@ -21,10 +21,11 @@ package benchmarks
 import (
 	polyglotBenchmark "benchmark/polyglot/benchmark"
 	"crypto/rand"
-	"github.com/loopholelabs/polyglot"
 	"math"
 	"runtime"
 	"testing"
+
+	"github.com/loopholelabs/polyglot/v2"
 )
 
 func BenchmarkEncodePolyglot(b *testing.B) {

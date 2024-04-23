@@ -1,11 +1,11 @@
 module benchmark
 
-go 1.20
+go 1.21.4
 
-replace github.com/loopholelabs/polyglot => ../
+replace github.com/loopholelabs/polyglot/v2 => ../
 
 require (
-	github.com/loopholelabs/polyglot v1.3.0
+	github.com/loopholelabs/polyglot/v2 v2.0.0
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.33.0
 )
