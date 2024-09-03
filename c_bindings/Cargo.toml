@@ -1,6 +1,6 @@
 [package]
 name = "c_bindings"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 description="A high-performance serialization framework used for encoding and decoding arbitrary datastructures across languages."
 license = "Apache-2.0"

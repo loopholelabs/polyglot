@@ -4,7 +4,7 @@ libdir=/usr/local/lib64
 includedir=/usr/local/include/
 
 Name: polyglot
-Version: 2.0.1
+Version: 2.0.2
 Description: Polyglot C/C++ Bindings
 Requires:
 Libs: -L${libdir} -lpolyglot
