@@ -18,7 +18,6 @@ package polyglot
 
 import (
 	"math"
-	"reflect"
 	"unsafe"
 )
 
@@ -247,14 +246,7 @@ func encodeBytes(b *Buffer, value []byte) {
 }
 func encodeString(b *Buffer, value string) {
 	b.Grow(stringSize + len(value))
-	var nb []byte
-	/* #nosec G103 */
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
-	/* #nosec G103 */
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&value))
-	bh.Data = sh.Data
-	bh.Cap = sh.Len
-	bh.Len = sh.Len
+	nb := unsafe.Slice(unsafe.StringData(value), len(value))
 	offset := b.offset
 	castValue := uint32(len(nb))
 	b.b[offset] = StringRawKind
@@ -311,19 +303,10 @@ func encodeError(b *Buffer, err error) {
 	offset := b.offset
 	b.b[offset] = ErrorRawKind
 	offset++
-
-	var nb []byte
-	/* #nosec G103 */
-	bh := (*reflect.SliceHeader)(unsafe.Pointer(&nb))
-	/* #nosec G103 */
-	sh := (*reflect.StringHeader)(unsafe.Pointer(&errString))
-	bh.Data = sh.Data
-	bh.Cap = sh.Len
-	bh.Len = sh.Len
+	nb := unsafe.Slice(unsafe.StringData(errString), len(errString))
 	castValue := uint32(len(nb))
 	b.b[offset] = StringRawKind
 	offset++
-
 	b.b[offset] = Uint32RawKind
 	offset++
 	if castValue < continuation {
