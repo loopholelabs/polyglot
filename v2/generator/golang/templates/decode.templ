@@ -79,12 +79,12 @@ var err error
         }
         }
     {{ else -}}
-        if x.{{ CamelCaseName $field.Name }} == nil {
+        if !d.Nil() {
         x.{{ CamelCaseName $field.Name }} = New{{ CamelCase $field.Message.FullName }}()
-        }
         err = x.{{ CamelCaseName $field.Name }}.decode(d)
         if err != nil {
         return err
+        }
         }
     {{end -}}
 {{end -}}
