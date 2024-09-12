@@ -38,14 +38,7 @@
 
 {{define "getFunc"}}
 func New{{ CamelCase .FullName }}() *{{ CamelCase .FullName }} {
-    return &{{ CamelCase .FullName }}{
-        {{ range $i, $v := (MakeIterable .Fields.Len) -}}
-            {{ $field := $.Fields.Get $i -}}
-            {{ if and (eq $field.Kind 11) (ne $field.Cardinality 3) -}} {{/* protoreflect.MessageKind protoreflect.Repeated */ -}}
-                {{ CamelCaseName $field.Name }}: New{{ CamelCase $field.Message.FullName }}(),
-            {{end -}}
-        {{end -}}
-    }
+    return &{{ CamelCase .FullName }}{}
 }
 {{end}}
 
