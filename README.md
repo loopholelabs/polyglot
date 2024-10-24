@@ -1,7 +1,7 @@
 <br/>
 <div align="center">
   <a href="https://github.com/loopholelabs/polyglot">
-    <img src="images/logo.png" alt="Logo" height="130">
+    <img src="images/logo.svg" alt="Logo" height="130">
   </a>
   <h3 align="center">Polyglot</h3>
   <h4 align="center">
