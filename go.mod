@@ -1,6 +1,8 @@
 module github.com/loopholelabs/polyglot
 
-go 1.18
+go 1.21
+
+toolchain go1.22.6
 
 require (
 	github.com/stretchr/testify v1.9.0
