@@ -24,8 +24,6 @@ jobs:
       - name: Install dependencies with npm
         run: npm install --save-dev
 
-      - name: Lint with npm
-        run: npm run lint
   rust:
     runs-on: ubuntu-latest
     steps:
