@@ -197,7 +197,7 @@ where
             for _ in 0..VARINT_LEN16 {
                 let byte = self.read_u8().ok().ok_or(DecodingError::InvalidU16)?;
                 if byte < CONTINUATION {
-                    return Ok(x | (byte as u16) << s);
+                    return Ok(x | ((byte as u16) << s));
                 }
                 x |= (byte as u16 & ((CONTINUATION as u16) - 1)) << s;
                 s += 7;
@@ -216,7 +216,7 @@ where
             for _ in 0..VARINT_LEN32 {
                 let byte = self.read_u8().ok().ok_or(DecodingError::InvalidU32)?;
                 if byte < CONTINUATION {
-                    return Ok(x | (byte as u32) << s);
+                    return Ok(x | ((byte as u32) << s));
                 }
                 x |= (byte as u32 & ((CONTINUATION as u32) - 1)) << s;
                 s += 7;
@@ -235,7 +235,7 @@ where
             for _ in 0..VARINT_LEN64 {
                 let byte = self.read_u8().ok().ok_or(DecodingError::InvalidU64)?;
                 if byte < CONTINUATION {
-                    return Ok(x | (byte as u64) << s);
+                    return Ok(x | ((byte as u64) << s));
                 }
                 x |= (byte as u64 & ((CONTINUATION as u64) - 1)) << s;
                 s += 7;
