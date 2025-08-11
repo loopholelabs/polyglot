@@ -1,10 +1,10 @@
 module github.com/loopholelabs/polyglot/v2
 
-go 1.21.4
+go 1.22
 
 require (
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.7
 )
 
 require (
