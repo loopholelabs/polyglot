@@ -15,6 +15,7 @@
  */
 
 import { TextDecoder, TextEncoder } from "util";
+
 import {
   Decoder,
   InvalidArrayError,
