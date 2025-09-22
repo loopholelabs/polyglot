@@ -23,7 +23,7 @@
     "devDependencies": {
         "@types/jest": "^29.5.2",
         "@types/json-bigint": "^1.0.1",
-        "@types/node": "^22.5.2",
+        "@types/node": "^24.5.2",
         "@typescript-eslint/eslint-plugin": "^8.13.0",
         "@typescript-eslint/parser": "^8.13.0",
         "eslint": "^9.36.0",
@@ -37,7 +37,7 @@
         "prettier": "^3.0.3",
         "process": "^0.11.10",
         "ts-jest": "^29.1.0",
-        "typedoc": "^0.26.3",
+        "typedoc": "^0.28.13",
         "typescript": "^5.2.2"
     }
 }
