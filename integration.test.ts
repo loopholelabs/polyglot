@@ -15,8 +15,10 @@
  */
 
 import * as fs from "fs/promises";
-import * as JSONBigint from "json-bigint";
 import { TextDecoder, TextEncoder } from "util";
+
+import * as JSONBigint from "json-bigint";
+
 import { Decoder } from "./decoder";
 import { Encoder } from "./encoder";
 import { Kind } from "./kind";

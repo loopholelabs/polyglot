@@ -15,6 +15,7 @@
  */
 
 import { TextEncoder } from "util";
+
 import { Encoder } from "./encoder";
 import { Kind } from "./kind";
 
