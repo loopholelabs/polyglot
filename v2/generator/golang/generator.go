@@ -52,6 +52,13 @@ func New() *Generator {
 		"GetEncodingFields":  GetEncodingFields,
 		"GetDecodingFields":  GetDecodingFields,
 		"GetKindLUT":         GetKindLUT,
+		"GetRealOneofs":      GetRealOneofs,
+		"HasRealOneofs":      HasRealOneofs,
+		"OneofCaseType":      OneofCaseType,
+		"OneofCaseConst":     OneofCaseConst,
+		"OneofNotSetConst":   OneofNotSetConst,
+		"ZeroValue":          ZeroValue,
+		"HasErrorField":      HasErrorField,
 		"CustomFields": func() string {
 			return g.CustomFields()
 		},

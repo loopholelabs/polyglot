@@ -7,12 +7,32 @@ func (x *{{ CamelCase .FullName }}) Encode (b *polyglot.Buffer) {
         {{ $encoding := GetEncodingFields .Fields -}}
         {{ if $encoding.Values -}}
             polyglot.Encoder(b){{ range $val := $encoding.Values -}}{{ $val -}}{{end -}}
-        {{ end -}}
+        {{ end }}
         {{ if $encoding.SliceFields -}}
             {{template "encodeSlices" $encoding -}}
         {{end -}}
         {{ if $encoding.MessageFields -}}
         {{template "encodeMessages" $encoding -}}
+        {{end -}}
+        {{ range $oneof := GetRealOneofs .Oneofs }}
+            polyglot.Encoder(b).Uint32(uint32(x.{{ FirstLowerCase (CamelCaseName $oneof.Name) }}Case))
+            switch x.{{ FirstLowerCase (CamelCaseName $oneof.Name) }}Case {
+            case {{ OneofNotSetConst $ $oneof }}:
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                case {{ OneofCaseConst $ $oneof $field }}:
+                    {{ $encoder := GetLUTEncoder $field.Kind -}}
+                    {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                        x.{{ CamelCaseName $field.Name }}.Encode(b)
+                    {{ else if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                        polyglot.Encoder(b){{ $encoder }}(uint32(x.{{ CamelCaseName $field.Name }}))
+                    {{ else -}}
+                        polyglot.Encoder(b){{ $encoder }}(x.{{ CamelCaseName $field.Name }})
+                    {{end}}
+            {{end -}}
+            default:
+                panic(ErrUnknownOneofCase)
+            }
         {{end -}}
     }
 }

@@ -5,23 +5,48 @@
             {{template "structs" $message}}
         {{end}}
     {{end}}
+    {{ range $oneof := GetRealOneofs .Oneofs -}}
+        export enum {{ OneofCaseType $ $oneof }} {
+            NotSet = 0,
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                {{ CamelCaseName $field.Name }} = {{ $field.Number }},
+            {{end -}}
+        }
+    {{end -}}
     export class {{ CamelCase .FullName }} {
         constructor(
         {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
             {{ $field := $.Fields.Get $i -}}
             {{ $value := FindValue $field -}}
+            {{ if IsRealOneofField $field -}}
+                {{ $value = OneofStorageType $field -}}
+            {{end -}}
             {{ LowercaseCamelCaseName $field.Name }}: {{ $value }},
+        {{end -}}
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            {{ OneofCaseField $oneof }}: {{ OneofCaseType $ $oneof }} = {{ OneofCaseType $ $oneof }}.NotSet,
         {{end -}}
         ) {
             {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
                 {{ $field := $.Fields.Get $i -}}
                 this._{{ LowercaseCamelCaseName $field.Name }} = {{ LowercaseCamelCaseName $field.Name }}
             {{end -}}
+            {{ range $oneof := GetRealOneofs .Oneofs -}}
+                this._{{ OneofCaseField $oneof }} = {{ OneofCaseField $oneof }}
+            {{end -}}
         }
+
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            private _{{ OneofCaseField $oneof }}: {{ OneofCaseType $ $oneof }}
+        {{end -}}
 
         {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
             {{ $field := $.Fields.Get $i -}}
             {{ $value := FindValue $field -}}
+            {{ if IsRealOneofField $field -}}
+                {{ $value = OneofStorageType $field -}}
+            {{end -}}
             private _{{ LowercaseCamelCaseName $field.Name }}: {{ $value }}
 
             get {{ LowercaseCamelCaseName $field.Name }}(): {{ $value }} {
@@ -29,9 +54,43 @@
             }
 
             set {{ LowercaseCamelCaseName $field.Name }}({{ LowercaseCamelCaseName $field.Name }}: {{ $value }}) {
-                this._{{ LowercaseCamelCaseName $field.Name }} = {{ LowercaseCamelCaseName $field.Name }}
+                {{ if IsRealOneofField $field -}}
+                    this.set{{ CamelCaseName $field.Name }}({{ LowercaseCamelCaseName $field.Name }})
+                {{ else -}}
+                    this._{{ LowercaseCamelCaseName $field.Name }} = {{ LowercaseCamelCaseName $field.Name }}
+                {{end -}}
             }
             
+        {{end -}}
+
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            which{{ CamelCaseName $oneof.Name }}(): {{ OneofCaseType $ $oneof }} {
+                return this._{{ OneofCaseField $oneof }}
+            }
+
+            clear{{ CamelCaseName $oneof.Name }}(): void {
+                this._{{ OneofCaseField $oneof }} = {{ OneofCaseType $ $oneof }}.NotSet
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    this._{{ LowercaseCamelCaseName $field.Name }} = undefined
+                {{end -}}
+            }
+
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                set{{ CamelCaseName $field.Name }}(value: {{ OneofStorageType $field }}): void {
+                    this.clear{{ CamelCaseName $oneof.Name }}()
+                    this._{{ LowercaseCamelCaseName $field.Name }} = value
+                    this._{{ OneofCaseField $oneof }} = {{ OneofCaseType $ $oneof }}.{{ CamelCaseName $field.Name }}
+                }
+
+                get{{ CamelCaseName $field.Name }}(): {{ OneofStorageType $field }} {
+                    if (this._{{ OneofCaseField $oneof }} !== {{ OneofCaseType $ $oneof }}.{{ CamelCaseName $field.Name }}) {
+                        return undefined
+                    }
+                    return this._{{ LowercaseCamelCaseName $field.Name }}
+                }
+            {{end -}}
         {{end -}}
 
         {{template "encode" .}}

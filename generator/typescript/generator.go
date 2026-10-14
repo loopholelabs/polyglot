@@ -72,6 +72,11 @@ func New() *Generator {
 		},
 		"LowercaseCamelCase":     utils.LowercaseCamelCase,
 		"LowercaseCamelCaseName": utils.LowercaseCamelCaseName,
+		"IsRealOneofField":       isRealOneofField,
+		"GetRealOneofs":          getRealOneofs,
+		"OneofCaseType":          oneofCaseType,
+		"OneofCaseField":         oneofCaseField,
+		"OneofStorageType":       oneofStorageType,
 		"CustomFields": func() string {
 			return g.CustomFields()
 		},

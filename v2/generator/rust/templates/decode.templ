@@ -35,25 +35,67 @@ impl Decode for {{ CamelCase .FullName }} {
                 {{ template "decodeMap" $field -}}
             {{ end -}}
         {{ end -}}
-        Ok(Some({{ CamelCase .FullName }}{
-            {{ range $field := $decoding.Other -}}
-                {{ $decoder := GetLUTDecoder $field.Kind -}}
-                {{ if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
-                {{ SnakeCaseName $field.Name }}: {{ FindValue $field }}::try_from(b.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?,
-                {{ else -}}
-                    {{ SnakeCaseName $field.Name }}: b{{ $decoder }}()?,
+        {{ range $field := $decoding.Other -}}
+            {{ $decoder := GetLUTDecoder $field.Kind -}}
+            {{ if eq $field.Kind 14 -}}  {{/* protoreflect.EnumKind */ -}}
+                let {{ SnakeCaseName $field.Name }} = {{ FindValue $field }}::try_from(b.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?;
+            {{ else -}}
+                let {{ SnakeCaseName $field.Name }} = b{{ $decoder }}()?;
+            {{end -}}
+        {{end -}}
+        {{ range $field := $decoding.SliceFields -}}
+            let {{ SnakeCaseName $field.Name }} = {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidArray)?;
+        {{ end -}}
+        {{ range $field := $decoding.MessageFields -}}
+            {{ if $field.Message.IsMapEntry -}}
+                let {{ SnakeCaseName $field.Name }} = {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidMap)?;
+            {{ else -}}
+                let {{ SnakeCaseName $field.Name }} = {{ CamelCase $field.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidStruct)?;
+            {{ end -}}
+        {{ end -}}
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                let mut {{ SnakeCaseName $field.Name }}_oneof: {{ OneofStorageType $field }} = None;
+            {{end -}}
+            let {{ SnakeCaseName $oneof.Name }}_case = match b.decode_u32()? {
+                0 => {{ OneofCaseType $ $oneof }}::NotSet,
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    {{ $field.Number }} => {
+                        {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                            {{ SnakeCaseName $field.Name }}_oneof = {{ CamelCase $field.Message.FullName }}::decode(b)?;
+                        {{ else if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                            {{ SnakeCaseName $field.Name }}_oneof = Some({{ FindValue $field }}::try_from(b.decode_u32()?).ok().ok_or(DecodingError::InvalidEnum)?);
+                        {{ else -}}
+                            {{ $decoder := GetLUTDecoder $field.Kind -}}
+                            {{ SnakeCaseName $field.Name }}_oneof = Some(b{{ $decoder }}()?);
+                        {{end -}}
+                        {{ OneofCaseType $ $oneof }}::{{ CamelCaseName $field.Name }}
+                    }
                 {{end -}}
+                _ => return Err(Box::new(DecodingError::InvalidEnum)),
+            };
+        {{end -}}
+        Ok(Some({{ CamelCase .FullName }}{
+            {{ range $oneof := GetRealOneofs .Oneofs -}}
+                {{ OneofCaseField $oneof }}: {{ SnakeCaseName $oneof.Name }}_case,
+            {{end -}}
+            {{ range $field := $decoding.Other -}}
+                {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }},
             {{end -}}
             {{ range $field := $decoding.SliceFields -}}
-                {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidArray)?,
+                {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }},
             {{ end -}}
             {{ range $field := $decoding.MessageFields -}}
-                {{ if $field.Message.IsMapEntry -}}
-                    {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }}_decode(b)?.ok_or(DecodingError::InvalidMap)?,
-                {{ else -}}
-                    {{ SnakeCaseName $field.Name }}: {{ CamelCase $field.Message.FullName }}::decode(b)?.ok_or(DecodingError::InvalidStruct)?,
-                {{ end -}}
+                {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }},
             {{ end -}}
+            {{ range $oneof := GetRealOneofs .Oneofs -}}
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    {{ SnakeCaseName $field.Name }}: {{ SnakeCaseName $field.Name }}_oneof,
+                {{end -}}
+            {{end -}}
         }))
     }
 }

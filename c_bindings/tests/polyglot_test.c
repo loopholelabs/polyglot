@@ -113,5 +113,47 @@ int main(void) {
     polyglot_free_decoder(decoder);
     free(buffer_pointer);
 
+    /*
+     * C has primitive bindings rather than a schema generator. A oneof is
+     * therefore the same two operations emitted by the generated clients:
+     * a uint32 field-number discriminator followed by the selected value.
+     */
+    encoder = polyglot_new_encoder(&status);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(encoder != NULL);
+
+    polyglot_encode_u32(&status, encoder, 7);
+    assert(status == POLYGLOT_STATUS_PASS);
+    polyglot_encode_string(&status, encoder, "active");
+    assert(status == POLYGLOT_STATUS_PASS);
+
+    buffer_size = polyglot_encoder_size(&status, encoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(buffer_size == 11);
+
+    const uint8_t expected_oneof[] = {
+        0x0a, 0x07,
+        0x05, 0x0a, 0x06, 'a', 'c', 't', 'i', 'v', 'e',
+    };
+    buffer_pointer = malloc(buffer_size);
+    assert(buffer_pointer != NULL);
+    polyglot_encoder_buffer(&status, encoder, buffer_pointer, buffer_size);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(memcmp(buffer_pointer, expected_oneof, sizeof(expected_oneof)) == 0);
+    polyglot_free_encoder(encoder);
+
+    decoder = polyglot_new_decoder(&status, buffer_pointer, buffer_size);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(decoder != NULL);
+    assert(polyglot_decode_u32(&status, decoder) == 7);
+    assert(status == POLYGLOT_STATUS_PASS);
+    output_string_pointer = polyglot_decode_string(&status, decoder);
+    assert(status == POLYGLOT_STATUS_PASS);
+    assert(output_string_pointer != NULL);
+    assert(strcmp(output_string_pointer, "active") == 0);
+    polyglot_free_decode_string(output_string_pointer);
+    polyglot_free_decoder(decoder);
+    free(buffer_pointer);
+
     printf("polyglot_test.c: PASS\n");
 }

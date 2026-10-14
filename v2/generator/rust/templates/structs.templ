@@ -5,10 +5,34 @@
             {{template "structs" $message}}
         {{end}}
     {{end}}
+    {{ range $oneof := GetRealOneofs .Oneofs -}}
+        #[derive(Debug, Eq, PartialEq, Copy, Clone)]
+        #[repr(u32)]
+        pub enum {{ OneofCaseType $ $oneof }} {
+            NotSet = 0,
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                {{ CamelCaseName $field.Name }} = {{ $field.Number }},
+            {{end -}}
+        }
+    {{end -}}
     pub struct {{ CamelCase .FullName }} {
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            {{  $privacy := GeneratedFieldPrivacy -}}
+            {{ if eq $privacy "private" -}}
+            {{ OneofCaseField $oneof }}: {{ OneofCaseType $ $oneof }},
+            {{ else if eq $privacy "public" -}}
+            pub {{ OneofCaseField $oneof }}: {{ OneofCaseType $ $oneof }},
+            {{ else -}}
+            pub(crate) {{ OneofCaseField $oneof }}: {{ OneofCaseType $ $oneof }},
+            {{ end -}}
+        {{end -}}
         {{ range $i, $v := (MakeIterable $.Fields.Len) -}}
             {{ $field := $.Fields.Get $i -}}
             {{ $value := FindValue $field -}}
+            {{ if IsRealOneofField $field -}}
+                {{ $value = OneofStorageType $field -}}
+            {{end -}}
 
             {{  $privacy := GeneratedFieldPrivacy -}}
             {{ if eq $privacy "private" -}}
@@ -18,6 +42,38 @@
             {{ else -}}
             pub(crate) {{ SnakeCaseName $field.Name }}: {{ $value }},
             {{ end -}}
+        {{end -}}
+    }
+
+    impl {{ CamelCase .FullName }} {
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            pub fn which_{{ SnakeCaseName $oneof.Name }}(&self) -> {{ OneofCaseType $ $oneof }} {
+                self.{{ OneofCaseField $oneof }}
+            }
+
+            pub fn clear_{{ SnakeCaseName $oneof.Name }}(&mut self) {
+                self.{{ OneofCaseField $oneof }} = {{ OneofCaseType $ $oneof }}::NotSet;
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    self.{{ SnakeCaseName $field.Name }} = None;
+                {{end -}}
+            }
+
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                pub fn set_{{ SnakeCaseName $field.Name }}(&mut self, value: {{ if eq $field.Kind 11 }}Option<{{ FindValue $field }}>{{ else }}{{ FindValue $field }}{{ end }}) {
+                    self.clear_{{ SnakeCaseName $oneof.Name }}();
+                    self.{{ SnakeCaseName $field.Name }} = {{ if eq $field.Kind 11 }}value{{ else }}Some(value){{ end }};
+                    self.{{ OneofCaseField $oneof }} = {{ OneofCaseType $ $oneof }}::{{ CamelCaseName $field.Name }};
+                }
+
+                pub fn get_{{ SnakeCaseName $field.Name }}(&self) -> Option<&{{ FindValue $field }}> {
+                    if self.{{ OneofCaseField $oneof }} != {{ OneofCaseType $ $oneof }}::{{ CamelCaseName $field.Name }} {
+                        return None;
+                    }
+                    self.{{ SnakeCaseName $field.Name }}.as_ref()
+                }
+            {{end -}}
         {{end -}}
     }
 
