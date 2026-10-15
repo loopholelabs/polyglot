@@ -50,16 +50,51 @@
             {{end -}}
         {{end}}
 
-        return { buf: decoded, value: new {{ CamelCase .FullName }}(
-            {{ range $field := $decoding.Other -}}
-                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                {{ $field := $oneof.Fields.Get $i -}}
+                let {{ LowercaseCamelCaseName $field.Name }}Oneof: {{ OneofStorageType $field }} = undefined
             {{end -}}
-            {{ range $field := $decoding.SliceFields -}}
-                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
-            {{ end -}}
-            {{ range $field := $decoding.MessageFields -}}
-                {{ LowercaseCamelCaseName $field.Name }}Temp.value,
-            {{ end -}}
+            const {{ LowercaseCamelCaseName $oneof.Name }}CaseValue = {{ TrackDependency "decodeUint32" }}(decoded)
+            decoded = {{ LowercaseCamelCaseName $oneof.Name }}CaseValue.buf
+            const {{ LowercaseCamelCaseName $oneof.Name }}Case = {{ LowercaseCamelCaseName $oneof.Name }}CaseValue.value as {{ OneofCaseType $ $oneof }}
+            switch ({{ LowercaseCamelCaseName $oneof.Name }}Case) {
+                case {{ OneofCaseType $ $oneof }}.NotSet:
+                    break
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    case {{ OneofCaseType $ $oneof }}.{{ CamelCaseName $field.Name }}: {
+                        {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                            const member = {{ CamelCase $field.Message.FullName }}.decode(decoded)
+                            {{ LowercaseCamelCaseName $field.Name }}Oneof = member.value
+                        {{ else if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                            const member = {{ TrackDependency "decodeUint32" }}(decoded)
+                            {{ LowercaseCamelCaseName $field.Name }}Oneof = member.value as {{ FindValue $field }}
+                        {{ else -}}
+                            const member = {{ GetLUTDecoder $field.Kind }}(decoded)
+                            {{ LowercaseCamelCaseName $field.Name }}Oneof = member.value
+                        {{end -}}
+                        decoded = member.buf
+                        break
+                    }
+                {{end -}}
+                default:
+                    throw new Error("unknown oneof case")
+            }
+        {{end -}}
+
+        return { buf: decoded, value: new {{ CamelCase .FullName }}(
+            {{ range $i, $v := (MakeIterable .Fields.Len) -}}
+                {{ $field := $.Fields.Get $i -}}
+                {{ if IsRealOneofField $field -}}
+                    {{ LowercaseCamelCaseName $field.Name }}Oneof,
+                {{ else -}}
+                    {{ LowercaseCamelCaseName $field.Name }}Temp.value,
+                {{end -}}
+            {{end -}}
+            {{ range $oneof := GetRealOneofs .Oneofs -}}
+                {{ LowercaseCamelCaseName $oneof.Name }}Case,
+            {{end -}}
         )}
     }
 {{end}}

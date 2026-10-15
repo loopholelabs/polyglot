@@ -58,6 +58,20 @@ func TestWrite(t *testing.T) {
 	assert.GreaterOrEqual(t, p.Cap(), 2048)
 }
 
+func TestGrowReusesSpareCapacity(t *testing.T) {
+	t.Parallel()
+
+	p := NewBufferFromBytes(make([]byte, 16, 1024))
+	p.Reset()
+
+	want := make([]byte, 128)
+	Encoder(p).Bytes(want)
+
+	got, err := Decoder(p.Bytes()).Bytes(nil)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
 type embedStruct struct {
 	test string
 	b    []byte

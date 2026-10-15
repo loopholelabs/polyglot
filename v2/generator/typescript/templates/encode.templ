@@ -14,6 +14,32 @@
         {{ if $encoding.MessageFields -}}
             {{template "encodeMessages" $encoding -}}
         {{end}}
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            encoded = {{ TrackDependency "encodeUint32" }}(encoded, this._{{ OneofCaseField $oneof }})
+            switch (this._{{ OneofCaseField $oneof }}) {
+                case {{ OneofCaseType $ $oneof }}.NotSet:
+                    break
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    case {{ OneofCaseType $ $oneof }}.{{ CamelCaseName $field.Name }}: {
+                        const value = this._{{ LowercaseCamelCaseName $field.Name }}
+                        if (value === undefined) {
+                            throw new Error("selected oneof member is undefined")
+                        }
+                        {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                            encoded = value.encode(encoded)
+                        {{ else if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                            encoded = {{ GetLUTEncoder $field.Kind }}(encoded, value as number)
+                        {{ else -}}
+                            encoded = {{ GetLUTEncoder $field.Kind }}(encoded, value)
+                        {{end -}}
+                        break
+                    }
+                {{end -}}
+                default:
+                    throw new Error("unknown oneof case")
+            }
+        {{end -}}
         
         return encoded
     }

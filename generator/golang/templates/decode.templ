@@ -17,7 +17,7 @@ func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
 
 {{ $decoding := GetDecodingFields .Fields -}}
 {{ $customDecode := CustomDecode -}}
-{{ if or $customDecode $decoding.Other $decoding.SliceFields $decoding.MessageFields -}}
+{{ if or $customDecode $decoding.Other $decoding.SliceFields $decoding.MessageFields (HasRealOneofs .Oneofs) -}}
 var err error
 {{ end -}}
 {{ $customDecode }}
@@ -89,6 +89,42 @@ var err error
         return err
         }
     {{end -}}
+{{end -}}
+{{ range $oneof := GetRealOneofs .Oneofs -}}
+    var {{ CamelCaseName $oneof.Name }}CaseRaw uint32
+    {{ CamelCaseName $oneof.Name }}CaseRaw, err = d.Uint32()
+    if err != nil {
+        return err
+    }
+    x.Clear{{ CamelCaseName $oneof.Name }}()
+    switch {{ OneofCaseType $ $oneof }}({{ CamelCaseName $oneof.Name }}CaseRaw) {
+    case {{ OneofNotSetConst $ $oneof }}:
+    {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+        {{ $field := $oneof.Fields.Get $i -}}
+        case {{ OneofCaseConst $ $oneof $field }}:
+            {{ $decoder := GetLUTDecoder $field.Kind -}}
+            {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                if !d.Nil() {
+                    x.{{ CamelCaseName $field.Name }} = New{{ CamelCase $field.Message.FullName }}()
+                    err = x.{{ CamelCaseName $field.Name }}.decode(d)
+                }
+            {{ else if eq $field.Kind 12 -}} {{/* protoreflect.BytesKind */ -}}
+                x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}(nil)
+            {{ else if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                var {{ CamelCaseName $field.Name }}Raw uint32
+                {{ CamelCaseName $field.Name }}Raw, err = d{{ $decoder }}()
+                x.{{ CamelCaseName $field.Name }} = {{ FindValue $field }}({{ CamelCaseName $field.Name }}Raw)
+            {{ else -}}
+                x.{{ CamelCaseName $field.Name }}, err = d{{ $decoder }}()
+            {{end -}}
+            if err != nil {
+                return err
+            }
+            x.{{ FirstLowerCase (CamelCaseName $oneof.Name) }}Case = {{ OneofCaseConst $ $oneof $field }}
+    {{end -}}
+    default:
+        return ErrUnknownOneofCase
+    }
 {{end -}}
     return nil
 }

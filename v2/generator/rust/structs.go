@@ -156,6 +156,9 @@ func getEncodingFields(fields protoreflect.FieldDescriptors) encodingFields {
 
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+		if isRealOneofField(field) {
+			continue
+		}
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
@@ -199,6 +202,9 @@ func getDecodingFields(fields protoreflect.FieldDescriptors) decodingFields {
 
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+		if isRealOneofField(field) {
+			continue
+		}
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
@@ -246,4 +252,32 @@ func getLUTDecoder(kind protoreflect.Kind) string {
 
 func getKindLUT(kind protoreflect.Kind) string {
 	return kindLUT[kind]
+}
+
+func isRealOneofField(field protoreflect.FieldDescriptor) bool {
+	oneof := field.ContainingOneof()
+	return oneof != nil && !oneof.IsSynthetic()
+}
+
+func getRealOneofs(oneofs protoreflect.OneofDescriptors) []protoreflect.OneofDescriptor {
+	real := make([]protoreflect.OneofDescriptor, 0, oneofs.Len())
+	for i := 0; i < oneofs.Len(); i++ {
+		oneof := oneofs.Get(i)
+		if !oneof.IsSynthetic() {
+			real = append(real, oneof)
+		}
+	}
+	return real
+}
+
+func oneofCaseType(message protoreflect.MessageDescriptor, oneof protoreflect.OneofDescriptor) string {
+	return utils.CamelCase(string(message.FullName())) + utils.CamelCase(string(oneof.Name())) + "Case"
+}
+
+func oneofCaseField(oneof protoreflect.OneofDescriptor) string {
+	return "__polyglot_" + utils.SnakeCase(string(oneof.Name())) + "_case"
+}
+
+func oneofStorageType(field protoreflect.FieldDescriptor) string {
+	return fmt.Sprintf("Option<%s>", findValue(field))
 }

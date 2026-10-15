@@ -155,6 +155,9 @@ func GetEncodingFields(fields protoreflect.FieldDescriptors) EncodingFields {
 
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+		if isRealOneofField(field) {
+			continue
+		}
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
@@ -194,6 +197,9 @@ func GetDecodingFields(fields protoreflect.FieldDescriptors) DecodingFields {
 
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
+		if isRealOneofField(field) {
+			continue
+		}
 		if field.Cardinality() == protoreflect.Repeated && !field.IsMap() {
 			sliceFields = append(sliceFields, field)
 		} else {
@@ -241,4 +247,63 @@ func GetLUTDecoder(kind protoreflect.Kind) string {
 
 func GetKindLUT(kind protoreflect.Kind) string {
 	return kindLUT[kind]
+}
+
+func isRealOneofField(field protoreflect.FieldDescriptor) bool {
+	oneof := field.ContainingOneof()
+	return oneof != nil && !oneof.IsSynthetic()
+}
+
+func GetRealOneofs(oneofs protoreflect.OneofDescriptors) []protoreflect.OneofDescriptor {
+	real := make([]protoreflect.OneofDescriptor, 0, oneofs.Len())
+	for i := 0; i < oneofs.Len(); i++ {
+		oneof := oneofs.Get(i)
+		if !oneof.IsSynthetic() {
+			real = append(real, oneof)
+		}
+	}
+	return real
+}
+
+func HasRealOneofs(oneofs protoreflect.OneofDescriptors) bool {
+	for i := 0; i < oneofs.Len(); i++ {
+		if !oneofs.Get(i).IsSynthetic() {
+			return true
+		}
+	}
+	return false
+}
+
+func OneofCaseType(message protoreflect.MessageDescriptor, oneof protoreflect.OneofDescriptor) string {
+	return utils.CamelCase(string(message.FullName())) + utils.CamelCase(string(oneof.Name())) + "Case"
+}
+
+func OneofNotSetConst(message protoreflect.MessageDescriptor, oneof protoreflect.OneofDescriptor) string {
+	return OneofCaseType(message, oneof) + "NotSet"
+}
+
+func OneofCaseConst(message protoreflect.MessageDescriptor, oneof protoreflect.OneofDescriptor, field protoreflect.FieldDescriptor) string {
+	return OneofCaseType(message, oneof) + utils.CamelCase(string(field.Name()))
+}
+
+func ZeroValue(field protoreflect.FieldDescriptor) string {
+	switch field.Kind() {
+	case protoreflect.BoolKind:
+		return "false"
+	case protoreflect.StringKind:
+		return `""`
+	case protoreflect.BytesKind, protoreflect.MessageKind:
+		return "nil"
+	default:
+		return "0"
+	}
+}
+
+func HasErrorField(fields protoreflect.FieldDescriptors) bool {
+	for i := 0; i < fields.Len(); i++ {
+		if utils.CamelCase(string(fields.Get(i).Name())) == "Error" {
+			return true
+		}
+	}
+	return false
 }

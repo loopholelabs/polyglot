@@ -1,5 +1,6 @@
 {{define "errors"}}
 var (
     ErrDecodeNil = errors.New("cannot decode into a nil root struct")
+    ErrUnknownOneofCase = errors.New("unknown oneof case")
 )
 {{end}}

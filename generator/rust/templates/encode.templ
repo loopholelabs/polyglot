@@ -11,6 +11,34 @@ impl Encode for {{ CamelCase .FullName }} {
         {{ if $encoding.MessageFields -}}
             {{template "encodeMessages" $encoding -}}
         {{end -}}
+        {{ range $oneof := GetRealOneofs .Oneofs -}}
+            b.encode_u32(self.{{ OneofCaseField $oneof }} as u32)?;
+            match self.{{ OneofCaseField $oneof }} {
+                {{ OneofCaseType $ $oneof }}::NotSet => {}
+                {{ range $i, $v := (MakeIterable $oneof.Fields.Len) -}}
+                    {{ $field := $oneof.Fields.Get $i -}}
+                    {{ OneofCaseType $ $oneof }}::{{ CamelCaseName $field.Name }} => {
+                        {{ if eq $field.Kind 11 -}} {{/* protoreflect.MessageKind */ -}}
+                            if let Some(value) = &self.{{ SnakeCaseName $field.Name }} {
+                                value.encode(b)?;
+                            } else {
+                                b.encode_none()?;
+                            }
+                        {{ else -}}
+                            let value = self.{{ SnakeCaseName $field.Name }}.as_ref().ok_or(DecodingError::InvalidStruct)?;
+                            {{ $encoder := GetLUTEncoder $field.Kind -}}
+                            {{ if eq $field.Kind 14 -}} {{/* protoreflect.EnumKind */ -}}
+                                b{{ $encoder }}(*value as u32)?;
+                            {{ else if or (eq $field.Kind 9) (eq $field.Kind 12) -}} {{/* string or bytes */ -}}
+                                b{{ $encoder }}(value)?;
+                            {{ else -}}
+                                b{{ $encoder }}(*value)?;
+                            {{end -}}
+                        {{end -}}
+                    }
+                {{end -}}
+            }
+        {{end -}}
         Ok(b)
     }
 }
